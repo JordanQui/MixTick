@@ -1,5 +1,11 @@
 // Choix du pitch de départ
+// ~pitch = 0.793700526; // 107.15 Ab
+// ~pitch = 0.840896415; // 113.52 A
+// ~pitch = 0,890898718; // 120.27 Bb
 ~pitch = 0.943874313; // 127.42 B
+// ~pitch = 1; // 135 C
+// ~pitch = 1.059463094; // 140.03 C#
+// ~pitch = 1.122462;  // 151.53 D
 
 ~environementPath = PathName.new(thisProcess.nowExecutingPath).pathOnly;
 
@@ -36,7 +42,6 @@
                 ~freeTrack.(oldIndex);
             };
 
-            // charger le nouveau
             ~tracksBuffer[index] = Buffer.read(
                 s,
                 ~files[index].fullPath,
