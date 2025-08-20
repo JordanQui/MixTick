@@ -11,6 +11,29 @@
     };
 
     bufferNames = ~files.collect { |file| file.fileName };
+
+    // Tableau de flags pour savoir si un morceau a été joué
+    ~playedFlags = Array.fill(bufferNames.size, { false });
+
+    // Fonction qui renvoie la liste avec les points
+    ~getDisplayNames = {
+        bufferNames.collect { |name, i|
+            if (~playedFlags[i]) { "• " ++ name } { name }
+        }
+    };
+
+    // Fonction pour rafraîchir toutes les listes
+    ~refreshAllMenus = {
+        var names = ~getDisplayNames.();
+        [listDeck1, listDeck2, listDeck3, listDeck4].do { |menu|
+            if(menu.notNil) {
+                var oldVal = menu.value;
+                menu.items = names;
+                menu.value = oldVal;
+            }
+        };
+    };
+
     window = Window.new("Buffer Selector", Rect(100, 100, 500, 400))
         .background_(Color.black);
 
@@ -18,11 +41,13 @@
     textDeck1 = StaticText(window).string_("Player X Buffer:"); applyDarkStyle.(textDeck1);
     listDeck1 = PopUpMenu(window)
         .font_(Font("Helvetica", 35))
-        .items_(bufferNames)
+        .items_(~getDisplayNames.())
         .background_(Color.black)
         .stringColor_(Color.white);
     listDeck1.action = { |menu|
         var idx = menu.value;
+        ~playedFlags[idx] = true;
+        ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck1);
     };
     loopLabel1 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel1);
@@ -40,11 +65,13 @@
     textDeck2 = StaticText(window).string_("Player Y Buffer:"); applyDarkStyle.(textDeck2);
     listDeck2 = PopUpMenu(window)
         .font_(Font("Helvetica", 35))
-        .items_(bufferNames)
+        .items_(~getDisplayNames.())
         .background_(Color.black)
         .stringColor_(Color.white);
     listDeck2.action = { |menu|
         var idx = menu.value;
+        ~playedFlags[idx] = true;
+        ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck2);
     };
     loopLabel2 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel2);
@@ -62,11 +89,13 @@
     textDeck3 = StaticText(window).string_("Player Z Buffer:"); applyDarkStyle.(textDeck3);
     listDeck3 = PopUpMenu(window)
         .font_(Font("Helvetica", 35))
-        .items_(bufferNames)
+        .items_(~getDisplayNames.())
         .background_(Color.black)
         .stringColor_(Color.white);
     listDeck3.action = { |menu|
         var idx = menu.value;
+        ~playedFlags[idx] = true;
+        ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck3);
     };
     loopLabel3 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel3);
@@ -84,11 +113,13 @@
     textDeck4 = StaticText(window).string_("Player W Buffer:"); applyDarkStyle.(textDeck4);
     listDeck4 = PopUpMenu(window)
         .font_(Font("Helvetica", 35))
-        .items_(bufferNames)
+        .items_(~getDisplayNames.())
         .background_(Color.black)
         .stringColor_(Color.white);
     listDeck4.action = { |menu|
         var idx = menu.value;
+        ~playedFlags[idx] = true;
+        ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck4);
     };
     loopLabel4 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel4);
