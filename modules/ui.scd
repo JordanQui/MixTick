@@ -57,6 +57,10 @@
         .action_({ |sl|
             var val = sl.value.asInteger;
             ~deck1.set(\loopOn, val);
+            if(val == 1) {
+                ~deck1.set(\loopTrig, 1);
+                AppClock.sched(0.01, { ~deck1.set(\loopTrig, 0) });
+            };
             loopLabel1.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
 
@@ -80,6 +84,10 @@
         .action_({ |sl|
             var val = sl.value.asInteger;
             ~deck2.set(\loopOn, val);
+            if(val == 1) {
+                ~deck2.set(\loopTrig, 1);
+                AppClock.sched(0.01, { ~deck2.set(\loopTrig, 0) });
+            };
             loopLabel2.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
 
@@ -103,6 +111,10 @@
         .action_({ |sl|
             var val = sl.value.asInteger;
             ~deck3.set(\loopOn, val);
+            if(val == 1) {
+                ~deck3.set(\loopTrig, 1);
+                AppClock.sched(0.01, { ~deck3.set(\loopTrig, 0) });
+            };
             loopLabel3.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
 
@@ -126,6 +138,10 @@
         .action_({ |sl|
             var val = sl.value.asInteger;
             ~deck4.set(\loopOn, val);
+            if(val == 1) {
+                ~deck4.set(\loopTrig, 1);
+                AppClock.sched(0.01, { ~deck4.set(\loopTrig, 0) });
+            };
             loopLabel4.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
 
