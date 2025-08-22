@@ -1,4 +1,3 @@
-(
 // ================= SynthDef BufferPlayer =================
 SynthDef(\bufferPlayer, {
     |out=0, bufnum=0, trig=1, pitch=1, amp=0.5,
@@ -83,4 +82,3 @@ SynthDef(\outputLimiter, {|input=0, out=0|
     var limited = Limiter.ar(inSig, 0.99, 0.01);
     Out.ar(out, limited.tanh);
 }).add;
-)
