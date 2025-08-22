@@ -3,7 +3,7 @@ SynthDef(\bufferPlayer, {
     |out=0, bufnum=0, trig=1, pitch=1, amp=0.5,
      low=0, mid1=0, mid2=0, high=0,
      cue=0, cuegain=1,
-     loopOn=0, bpm=120,
+     loopOn=0, bpm=120, loopTrig=0,
      smoothTime=0.01, fadeTime=0.05| // fadeTime = fondu aux bords de la boucle
 
     var bufFrames, rate, measureDurSec, measureFrames;
@@ -11,7 +11,7 @@ SynthDef(\bufferPlayer, {
     var sigNormal, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
-    var trigImpulse, crossEnv;
+    var trigImpulse, crossEnv, trigEvents;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -22,7 +22,8 @@ SynthDef(\bufferPlayer, {
     measureFrames = measureDurSec * BufSampleRate.kr(bufnum);
 
     // === Trigger pour relancer la boucle ===
-    trigImpulse = Trig1.kr(Changed.kr(trig), 0.001);
+    trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
+    trigImpulse = Trig1.kr(trigEvents, 0.001);
 
     // === Phasor normal (lecture libre) ===
     phasorNormal = Phasor.ar(
@@ -62,7 +63,7 @@ SynthDef(\bufferPlayer, {
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
 
     // === Anti-clic supplémentaire lors d’un changement de trig ===
-    crossEnv = Lag.kr(Changed.kr(trig), smoothTime);
+    crossEnv = Lag.kr(trigEvents, smoothTime);
     sig = (sig * (1 - crossEnv)) + (sigLoop * crossEnv);
 
     // === EQ ===

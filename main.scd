@@ -41,9 +41,13 @@ s.options.maxNodes = 1024;
                         ~deckBuffers[key] = newBuf;
                         deck.set(\bufnum, newBuf.bufnum);
 
-                        // synchro avec le transport
-                        deck.set(\trig, 1);
-                        AppClock.sched(0.01, { deck.set(\trig, 0) });
+                        // synchro avec le transport (si le synth est actif)
+                        if(deck.isPlaying) {
+                            deck.set(\trig, 1);
+                            AppClock.sched(0.01, {
+                                if(deck.isPlaying) { deck.set(\trig, 0) }
+                            });
+                        };
 
                         ("[LOAD] Deck % → track % chargé : % (bufnum %, % frames, % canaux)")
                             .format(key, index, ~files[index].fileName, newBuf.bufnum, newBuf.numFrames, newBuf.numChannels)
@@ -78,6 +82,7 @@ s.options.maxNodes = 1024;
     ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
     ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
     ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
+    s.sync;
 
     // fenêtre audio
     s.makeWindow;
@@ -91,10 +96,12 @@ s.options.maxNodes = 1024;
     ~transport = Routine({
         loop {
             [~deck1, ~deck2, ~deck3, ~deck4].do { |d|
-                if(d.notNil) {
+                if(d.notNil and: { d.isPlaying }) {
                     d.set(\trig, 1);
-                    AppClock.sched(0.01, { d.set(\trig, 0) });
-                }
+                    AppClock.sched(0.01, {
+                        if(d.isPlaying) { d.set(\trig, 0) }
+                    });
+                };
             };
             ~beatDur.wait;
         }

@@ -56,10 +56,14 @@
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl|
             var val = sl.value.asInteger;
-            ~deck1.set(\loopOn, val);
-            if(val == 1) {
-                ~deck1.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck1.set(\loopTrig, 0) });
+            if(~deck1.notNil and: { ~deck1.isPlaying }) {
+                ~deck1.set(\loopOn, val);
+                if(val == 1) {
+                    ~deck1.set(\loopTrig, 1);
+                    AppClock.sched(0.01, {
+                        if(~deck1.notNil and: { ~deck1.isPlaying }) { ~deck1.set(\loopTrig, 0) }
+                    });
+                };
             };
             loopLabel1.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
@@ -83,10 +87,14 @@
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl|
             var val = sl.value.asInteger;
-            ~deck2.set(\loopOn, val);
-            if(val == 1) {
-                ~deck2.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck2.set(\loopTrig, 0) });
+            if(~deck2.notNil and: { ~deck2.isPlaying }) {
+                ~deck2.set(\loopOn, val);
+                if(val == 1) {
+                    ~deck2.set(\loopTrig, 1);
+                    AppClock.sched(0.01, {
+                        if(~deck2.notNil and: { ~deck2.isPlaying }) { ~deck2.set(\loopTrig, 0) }
+                    });
+                };
             };
             loopLabel2.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
@@ -110,10 +118,14 @@
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl|
             var val = sl.value.asInteger;
-            ~deck3.set(\loopOn, val);
-            if(val == 1) {
-                ~deck3.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck3.set(\loopTrig, 0) });
+            if(~deck3.notNil and: { ~deck3.isPlaying }) {
+                ~deck3.set(\loopOn, val);
+                if(val == 1) {
+                    ~deck3.set(\loopTrig, 1);
+                    AppClock.sched(0.01, {
+                        if(~deck3.notNil and: { ~deck3.isPlaying }) { ~deck3.set(\loopTrig, 0) }
+                    });
+                };
             };
             loopLabel3.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
@@ -137,10 +149,14 @@
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl|
             var val = sl.value.asInteger;
-            ~deck4.set(\loopOn, val);
-            if(val == 1) {
-                ~deck4.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck4.set(\loopTrig, 0) });
+            if(~deck4.notNil and: { ~deck4.isPlaying }) {
+                ~deck4.set(\loopOn, val);
+                if(val == 1) {
+                    ~deck4.set(\loopTrig, 1);
+                    AppClock.sched(0.01, {
+                        if(~deck4.notNil and: { ~deck4.isPlaying }) { ~deck4.set(\loopTrig, 0) }
+                    });
+                };
             };
             loopLabel4.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
