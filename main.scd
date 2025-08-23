@@ -11,7 +11,13 @@ s.options.maxNodes = 1024;
 // ======================
 // Pitch de départ
 // ======================
+// ~pitch = 0.793700526; // 107.15 Ab
+// ~pitch = 0.840896415; // 113.52 A
+// ~pitch = 0,890898718; // 120.27 Bb
 ~pitch = 0.943874313; // 127.42 B
+// ~pitch = 1; // 135 C
+// ~pitch = 1.059463094; // 140.03 C#
+// ~pitch = 1.122462; // 151.53 D
 
 ~environementPath = PathName.new(thisProcess.nowExecutingPath).pathOnly;
 
@@ -19,6 +25,7 @@ s.options.maxNodes = 1024;
 // Routine principale
 // ======================
 ~mixTick = Routine {
+    ~bpm = 135 * ~pitch;
 
     // --- fichiers disponibles ---
     ~files = PathName("/Volumes/DJ/-tracks/-135").entries;
@@ -78,10 +85,10 @@ s.options.maxNodes = 1024;
     ~limiter = Synth(\outputLimiter, [\input, ~outputBus, \out, 0]);
 
     // decks
-    ~deck1 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
-    ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
-    ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
-    ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
+    ~deck1 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
+    ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
+    ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
+    ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
     s.sync;
 
     // fenêtre audio
@@ -90,7 +97,6 @@ s.options.maxNodes = 1024;
     // ======================
     // Transport global
     // ======================
-    ~bpm = 120;
     ~beatDur = 60 / ~bpm;
 
     ~transport = Routine({
