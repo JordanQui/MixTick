@@ -19,7 +19,8 @@ SynthDef(\bufferPlayer, {
 
     // === Durée d'une mesure en frames (4 temps) ===
     measureDurSec = (60 / bpm) * 4;
-    measureFrames = measureDurSec * BufSampleRate.kr(bufnum);
+    // ajuster la longueur de mesure selon le pitch pour garder une durée fixe
+    measureFrames = measureDurSec * BufSampleRate.kr(bufnum) * pitch;
 
     // === Trigger pour relancer la boucle ===
     trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
