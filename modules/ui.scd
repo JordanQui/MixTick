@@ -2,12 +2,19 @@
     var window, bufferNames,
     textDeck1, textDeck2, textDeck3, textDeck4,
     listDeck1, listDeck2, listDeck3, listDeck4,
-    loopSlider1, loopLabel1, loopSlider2, loopLabel2,
-    loopSlider3, loopLabel3, loopSlider4, loopLabel4,
+    loopSlider1, loopLabel1, resyncButton1,
+    loopSlider2, loopLabel2, resyncButton2,
+    loopSlider3, loopLabel3, resyncButton3,
+    loopSlider4, loopLabel4, resyncButton4,
     freqscope;
 
     var applyDarkStyle = { |view|
         view.background_(Color.black).stringColor_(Color.white);
+    };
+
+    var resyncDeck = { |deck|
+        deck.set(\trig, 1);
+        AppClock.sched(0.01, { deck.set(\trig, 0) });
     };
 
     bufferNames = ~files.collect { |file| file.fileName };
@@ -63,6 +70,9 @@
             };
             loopLabel1.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+        resyncButton1 = Button(window)
+        .states_([["Resync", Color.white, Color.black]])
+        .action_({ resyncDeck.(~deck1) });
 
     // --- Deck 2 ---
     textDeck2 = StaticText(window).string_("Player X Buffer:"); applyDarkStyle.(textDeck2);
@@ -90,6 +100,9 @@
             };
             loopLabel2.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+        resyncButton2 = Button(window)
+        .states_([["Resync", Color.white, Color.black]])
+        .action_({ resyncDeck.(~deck2) });
 
     // --- Deck 3 ---
     textDeck3 = StaticText(window).string_("Player Z Buffer:"); applyDarkStyle.(textDeck3);
@@ -117,6 +130,9 @@
             };
             loopLabel3.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+        resyncButton3 = Button(window)
+        .states_([["Resync", Color.white, Color.black]])
+        .action_({ resyncDeck.(~deck3) });
 
     // --- Deck 4 ---
     textDeck4 = StaticText(window).string_("Player W Buffer:"); applyDarkStyle.(textDeck4);
@@ -144,6 +160,9 @@
             };
             loopLabel4.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+        resyncButton4 = Button(window)
+        .states_([["Resync", Color.white, Color.black]])
+        .action_({ resyncDeck.(~deck4) });
 
     // --- Scope ---
     freqscope = FreqScopeView(window);
@@ -153,10 +172,10 @@
     window.layout_(
         VLayout(
             HLayout(
-                VLayout(textDeck1, listDeck1, loopLabel1, loopSlider1),
-                VLayout(textDeck2, listDeck2, loopLabel2, loopSlider2),
-                VLayout(textDeck3, listDeck3, loopLabel3, loopSlider3),
-                VLayout(textDeck4, listDeck4, loopLabel4, loopSlider4)
+                VLayout(textDeck1, listDeck1, loopLabel1, loopSlider1, resyncButton1),
+                VLayout(textDeck2, listDeck2, loopLabel2, loopSlider2, resyncButton2),
+                VLayout(textDeck3, listDeck3, loopLabel3, loopSlider3, resyncButton3),
+                VLayout(textDeck4, listDeck4, loopLabel4, loopSlider4, resyncButton4)
             ),
             freqscope
         )
