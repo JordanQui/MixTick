@@ -12,6 +12,7 @@ SynthDef(\bufferPlayer, {
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
+    var loopCaptureTrig, loopCaptureImpulse;
     var fadeSafeTime, loopDelayed, retrigEnv;
 
     // === Infos buffer ===
@@ -26,7 +27,9 @@ SynthDef(\bufferPlayer, {
     loopFrames = loopDurSec * BufSampleRate.kr(bufnum) * pitch;
 
     // === Trigger pour relancer la boucle ===
-    trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
+    loopCaptureTrig = HPZ1.kr(loopTrig).max(0);
+    loopCaptureImpulse = Trig1.kr(loopCaptureTrig, 0.001);
+    trigEvents = HPZ1.kr(trig).max(0) + loopCaptureTrig;
     trigImpulse = Trig1.kr(trigEvents, 0.001);
 
     // === Phasor normal (lecture libre) ===
@@ -37,7 +40,7 @@ SynthDef(\bufferPlayer, {
     );
 
     // === Points de boucle latched sur le trigger ===
-    loopStart = Latch.kr(phasorNormal, trigImpulse);
+    loopStart = Latch.kr(phasorNormal, loopCaptureImpulse);
     loopEnd   = loopStart + loopFrames;
 
     // === Phasor en mode boucle ===
