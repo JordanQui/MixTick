@@ -49,9 +49,10 @@
     loopLengthLabels = ["1 temps", "2 temps", "1 mesure"];
 
     updateLoopControl = { |deck, slider, statusLabel, lengthLabel|
-        var value = slider.value.round(1).asInteger;
-        value = value.clip(0, loopLengthChoices.size);
-        slider.value = value;
+        var steps = loopLengthChoices.size.max(1);
+        var normalized = slider.value.clip(0, 1);
+        var value = (normalized * steps).round.asInteger.clip(0, loopLengthChoices.size);
+        slider.value = value / steps;
         if(value == 0) {
             deck.set(\loopOn, 0);
             statusLabel.string = "Loop OFF";
@@ -61,8 +62,6 @@
             var beats = loopLengthChoices[index];
             deck.set(\loopOn, 1);
             deck.set(\loopBeats, beats);
-            deck.set(\loopTrig, 1);
-            AppClock.sched(0.01, { deck.set(\loopTrig, 0) });
             statusLabel.string = "Loop ON";
             lengthLabel.string = "Durée boucle: " ++ loopLengthLabels[index];
         };
@@ -83,8 +82,7 @@
     };
     loopLabel1 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel1);
     loopSlider1 = Slider(window)
-        .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
-        .maxValue_(loopLengthChoices.size)
+        .orientation_(\horizontal).minHeight_(100).thumbSize_(200)
         .value_(0)
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl| updateLoopControl.(~deck1, sl, loopLabel1, loopLengthLabel1) });
@@ -108,8 +106,7 @@
     };
     loopLabel2 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel2);
     loopSlider2 = Slider(window)
-        .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
-        .maxValue_(loopLengthChoices.size)
+        .orientation_(\horizontal).minHeight_(100).thumbSize_(200)
         .value_(0)
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl| updateLoopControl.(~deck2, sl, loopLabel2, loopLengthLabel2) });
@@ -133,8 +130,7 @@
     };
     loopLabel3 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel3);
     loopSlider3 = Slider(window)
-        .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
-        .maxValue_(loopLengthChoices.size)
+        .orientation_(\horizontal).minHeight_(100).thumbSize_(200)
         .value_(0)
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl| updateLoopControl.(~deck3, sl, loopLabel3, loopLengthLabel3) });
@@ -158,8 +154,7 @@
     };
     loopLabel4 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel4);
     loopSlider4 = Slider(window)
-        .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
-        .maxValue_(loopLengthChoices.size)
+        .orientation_(\horizontal).minHeight_(100).thumbSize_(200)
         .value_(0)
         .background_(Color.black).knobColor_(Color.white)
         .action_({ |sl| updateLoopControl.(~deck4, sl, loopLabel4, loopLengthLabel4) });
