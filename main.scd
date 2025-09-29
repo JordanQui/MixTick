@@ -1,7 +1,7 @@
 // ======================
 // Options serveur
 // ======================
-s.options.memSize = 2.pow(21);   // ~8 Mo
+s.options.memSize = 2.pow(21);
 s.options.numBuffers = 2048;
 s.options.numWireBufs = 64;
 s.options.numOutputBusChannels = 2;
@@ -13,8 +13,8 @@ s.options.maxNodes = 1024;
 // ======================
 // ~pitch = 0.793700526; // 107.15 Ab
 // ~pitch = 0.840896415; // 113.52 A
-// ~pitch = 0,890898718; // 120.27 Bb
-~pitch = 0.943874313; // 127.42 B
+~pitch = 0.890898718; // 120.27 Bb
+// ~pitch = 0.943874313; // 127.42 B
 // ~pitch = 1; // 135 C
 // ~pitch = 1.059463094; // 140.03 C#
 // ~pitch = 1.122462; // 151.53 D
@@ -28,7 +28,7 @@ s.options.maxNodes = 1024;
     ~bpm = 135 * ~pitch;
 
     // --- fichiers disponibles ---
-    ~files = PathName("/Volumes/DJ/-tracks/-135").entries;
+    ~files = PathName("/Users/jordanquiqueret/Works/tracks").entries;
 
     // --- dictionnaire : deckName -> buffer actuel ---
     ~deckBuffers = IdentityDictionary.new;
