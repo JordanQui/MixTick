@@ -8,10 +8,11 @@ SynthDef(\bufferPlayer, {
 
     var bufFrames, rate, beatDurSec, loopDurSec, loopFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
-    var sigNormal, sigLoop, sig;
+    var sigNormal, sigLoopRaw, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
+    var fadeSafeTime, loopDelayed, retrigEnv;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -49,15 +50,21 @@ SynthDef(\bufferPlayer, {
     );
 
     // === Lecture audio ===
-    sigNormal = BufRd.ar(2, bufnum, phasorNormal, loop: 1);
-    sigLoop   = BufRd.ar(2, bufnum, phasorLoop, loop: 1);
+    sigNormal   = BufRd.ar(2, bufnum, phasorNormal, loop: 1);
+    sigLoopRaw  = BufRd.ar(2, bufnum, phasorLoop, loop: 1);
 
     // === Fade sur les bords de la boucle ===
     fadeFrames = fadeTime * BufSampleRate.kr(bufnum);
     fadeInLoop  = ((phasorLoop - loopStart) / fadeFrames).clip(0, 1);
     fadeOutLoop = ((loopEnd - phasorLoop) / fadeFrames).clip(0, 1);
     fadeEnvLoop = fadeInLoop * fadeOutLoop;
-    sigLoop = sigLoop * fadeEnvLoop;
+    sigLoopRaw = sigLoopRaw * fadeEnvLoop;
+
+    // === Fondu court lors d’un re-trigger pour éviter les clics ===
+    fadeSafeTime = fadeTime.max(0.001);
+    loopDelayed  = DelayN.ar(sigLoopRaw, fadeSafeTime, fadeSafeTime);
+    retrigEnv    = Decay2.kr(trigImpulse, 0.001, fadeSafeTime);
+    sigLoop      = (sigLoopRaw * (1 - retrigEnv)) + (loopDelayed * retrigEnv);
 
     // === Crossfade normal <-> loop ===
     loopOnLag     = LagUD.kr(loopOn, fadeTime, fadeTime);

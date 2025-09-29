@@ -6,15 +6,24 @@
     loopSlider2, loopLabel2, loopLengthLabel2, resyncButton2,
     loopSlider3, loopLabel3, loopLengthLabel3, resyncButton3,
     loopSlider4, loopLabel4, loopLengthLabel4, resyncButton4,
-    freqscope, loopLengthChoices, loopLengthLabels, updateLoopControl;
+    freqscope, loopLengthChoices, loopLengthLabels, updateLoopControl,
+    sendPulse;
 
     var applyDarkStyle = { |view|
         view.background_(Color.black).stringColor_(Color.white);
     };
 
+    sendPulse = { |deck, param, hold = 0.02|
+        if(deck.notNil and: { deck.isPlaying }) {
+            deck.set(param, 1);
+            AppClock.sched(hold, {
+                if(deck.isPlaying) { deck.set(param, 0) };
+            });
+        };
+    };
+
     var resyncDeck = { |deck|
-        deck.set(\trig, 1);
-        AppClock.sched(0.01, { deck.set(\trig, 0) });
+        sendPulse.(deck, \trig);
     };
 
     bufferNames = ~files.collect { |file| file.fileName };
@@ -62,6 +71,7 @@
             var beats = loopLengthChoices[index];
             deck.set(\loopOn, 1);
             deck.set(\loopBeats, beats);
+            sendPulse.(deck, \loopTrig);
             statusLabel.string = "Loop ON";
             lengthLabel.string = "Durée boucle: " ++ loopLengthLabels[index];
         };
