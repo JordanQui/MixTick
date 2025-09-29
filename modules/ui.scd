@@ -2,11 +2,11 @@
     var window, bufferNames,
     textDeck1, textDeck2, textDeck3, textDeck4,
     listDeck1, listDeck2, listDeck3, listDeck4,
-    loopSlider1, loopLabel1, loopLengthLabel1, loopLengthMenu1, resyncButton1,
-    loopSlider2, loopLabel2, loopLengthLabel2, loopLengthMenu2, resyncButton2,
-    loopSlider3, loopLabel3, loopLengthLabel3, loopLengthMenu3, resyncButton3,
-    loopSlider4, loopLabel4, loopLengthLabel4, loopLengthMenu4, resyncButton4,
-    freqscope, loopLengthChoices, loopLengthLabels, updateLoopLength;
+    loopSlider1, loopLabel1, loopLengthLabel1, resyncButton1,
+    loopSlider2, loopLabel2, loopLengthLabel2, resyncButton2,
+    loopSlider3, loopLabel3, loopLengthLabel3, resyncButton3,
+    loopSlider4, loopLabel4, loopLengthLabel4, resyncButton4,
+    freqscope, loopLengthChoices, loopLengthLabels, updateLoopControl;
 
     var applyDarkStyle = { |view|
         view.background_(Color.black).stringColor_(Color.white);
@@ -48,17 +48,23 @@
     loopLengthChoices = [1, 2, 4];
     loopLengthLabels = ["1 temps", "2 temps", "1 mesure"];
 
-    updateLoopLength = { |deck, slider, label, menu|
-        var index = menu.value;
-        if(index.isNil) { index = 2 }; // valeur par défaut : 1 mesure
-        index = index.clip(0, loopLengthChoices.size - 1);
-        menu.value = index;
-        var beats = loopLengthChoices[index];
-        deck.set(\loopBeats, beats);
-        label.string = "Durée boucle: " ++ loopLengthLabels[index];
-        if(slider.value.asInteger == 1) {
+    updateLoopControl = { |deck, slider, statusLabel, lengthLabel|
+        var value = slider.value.round(1).asInteger;
+        value = value.clip(0, loopLengthChoices.size);
+        slider.value = value;
+        if(value == 0) {
+            deck.set(\loopOn, 0);
+            statusLabel.string = "Loop OFF";
+            lengthLabel.string = "Durée boucle: --";
+        } {
+            var index = value - 1;
+            var beats = loopLengthChoices[index];
+            deck.set(\loopOn, 1);
+            deck.set(\loopBeats, beats);
             deck.set(\loopTrig, 1);
             AppClock.sched(0.01, { deck.set(\loopTrig, 0) });
+            statusLabel.string = "Loop ON";
+            lengthLabel.string = "Durée boucle: " ++ loopLengthLabels[index];
         };
     };
 
@@ -78,23 +84,11 @@
     loopLabel1 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel1);
     loopSlider1 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
+        .maxValue_(loopLengthChoices.size)
+        .value_(0)
         .background_(Color.black).knobColor_(Color.white)
-        .action_({ |sl|
-            var val = sl.value.asInteger;
-            ~deck1.set(\loopOn, val);
-            if(val == 1) {
-                ~deck1.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck1.set(\loopTrig, 0) });
-            };
-            loopLabel1.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
-        });
-    loopLengthLabel1 = StaticText(window).string_("Durée boucle: 1 mesure"); applyDarkStyle.(loopLengthLabel1);
-    loopLengthMenu1 = PopUpMenu(window)
-        .items_(loopLengthLabels)
-        .background_(Color.black)
-        .stringColor_(Color.white)
-        .value_(2)
-        .action_({ |menu| updateLoopLength.(~deck1, loopSlider1, loopLengthLabel1, menu) });
+        .action_({ |sl| updateLoopControl.(~deck1, sl, loopLabel1, loopLengthLabel1) });
+    loopLengthLabel1 = StaticText(window).string_("Durée boucle: --"); applyDarkStyle.(loopLengthLabel1);
     resyncButton1 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
         .action_({ resyncDeck.(~deck1) });
@@ -115,23 +109,11 @@
     loopLabel2 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel2);
     loopSlider2 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
+        .maxValue_(loopLengthChoices.size)
+        .value_(0)
         .background_(Color.black).knobColor_(Color.white)
-        .action_({ |sl|
-            var val = sl.value.asInteger;
-            ~deck2.set(\loopOn, val);
-            if(val == 1) {
-                ~deck2.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck2.set(\loopTrig, 0) });
-            };
-            loopLabel2.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
-        });
-    loopLengthLabel2 = StaticText(window).string_("Durée boucle: 1 mesure"); applyDarkStyle.(loopLengthLabel2);
-    loopLengthMenu2 = PopUpMenu(window)
-        .items_(loopLengthLabels)
-        .background_(Color.black)
-        .stringColor_(Color.white)
-        .value_(2)
-        .action_({ |menu| updateLoopLength.(~deck2, loopSlider2, loopLengthLabel2, menu) });
+        .action_({ |sl| updateLoopControl.(~deck2, sl, loopLabel2, loopLengthLabel2) });
+    loopLengthLabel2 = StaticText(window).string_("Durée boucle: --"); applyDarkStyle.(loopLengthLabel2);
     resyncButton2 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
         .action_({ resyncDeck.(~deck2) });
@@ -152,23 +134,11 @@
     loopLabel3 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel3);
     loopSlider3 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
+        .maxValue_(loopLengthChoices.size)
+        .value_(0)
         .background_(Color.black).knobColor_(Color.white)
-        .action_({ |sl|
-            var val = sl.value.asInteger;
-            ~deck3.set(\loopOn, val);
-            if(val == 1) {
-                ~deck3.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck3.set(\loopTrig, 0) });
-            };
-            loopLabel3.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
-        });
-    loopLengthLabel3 = StaticText(window).string_("Durée boucle: 1 mesure"); applyDarkStyle.(loopLengthLabel3);
-    loopLengthMenu3 = PopUpMenu(window)
-        .items_(loopLengthLabels)
-        .background_(Color.black)
-        .stringColor_(Color.white)
-        .value_(2)
-        .action_({ |menu| updateLoopLength.(~deck3, loopSlider3, loopLengthLabel3, menu) });
+        .action_({ |sl| updateLoopControl.(~deck3, sl, loopLabel3, loopLengthLabel3) });
+    loopLengthLabel3 = StaticText(window).string_("Durée boucle: --"); applyDarkStyle.(loopLengthLabel3);
     resyncButton3 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
         .action_({ resyncDeck.(~deck3) });
@@ -189,23 +159,11 @@
     loopLabel4 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel4);
     loopSlider4 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
+        .maxValue_(loopLengthChoices.size)
+        .value_(0)
         .background_(Color.black).knobColor_(Color.white)
-        .action_({ |sl|
-            var val = sl.value.asInteger;
-            ~deck4.set(\loopOn, val);
-            if(val == 1) {
-                ~deck4.set(\loopTrig, 1);
-                AppClock.sched(0.01, { ~deck4.set(\loopTrig, 0) });
-            };
-            loopLabel4.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
-        });
-    loopLengthLabel4 = StaticText(window).string_("Durée boucle: 1 mesure"); applyDarkStyle.(loopLengthLabel4);
-    loopLengthMenu4 = PopUpMenu(window)
-        .items_(loopLengthLabels)
-        .background_(Color.black)
-        .stringColor_(Color.white)
-        .value_(2)
-        .action_({ |menu| updateLoopLength.(~deck4, loopSlider4, loopLengthLabel4, menu) });
+        .action_({ |sl| updateLoopControl.(~deck4, sl, loopLabel4, loopLengthLabel4) });
+    loopLengthLabel4 = StaticText(window).string_("Durée boucle: --"); applyDarkStyle.(loopLengthLabel4);
     resyncButton4 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
         .action_({ resyncDeck.(~deck4) });
@@ -218,10 +176,10 @@
     window.layout_(
         VLayout(
             HLayout(
-                VLayout(textDeck1, listDeck1, loopLabel1, loopSlider1, loopLengthLabel1, loopLengthMenu1, resyncButton1),
-                VLayout(textDeck2, listDeck2, loopLabel2, loopSlider2, loopLengthLabel2, loopLengthMenu2, resyncButton2),
-                VLayout(textDeck3, listDeck3, loopLabel3, loopSlider3, loopLengthLabel3, loopLengthMenu3, resyncButton3),
-                VLayout(textDeck4, listDeck4, loopLabel4, loopSlider4, loopLengthLabel4, loopLengthMenu4, resyncButton4)
+                VLayout(textDeck1, listDeck1, loopLabel1, loopSlider1, loopLengthLabel1, resyncButton1),
+                VLayout(textDeck2, listDeck2, loopLabel2, loopSlider2, loopLengthLabel2, resyncButton2),
+                VLayout(textDeck3, listDeck3, loopLabel3, loopSlider3, loopLengthLabel3, resyncButton3),
+                VLayout(textDeck4, listDeck4, loopLabel4, loopSlider4, loopLengthLabel4, resyncButton4)
             ),
             freqscope
         )
