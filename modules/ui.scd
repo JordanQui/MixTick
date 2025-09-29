@@ -69,9 +69,17 @@
         } {
             var index = value - 1;
             var beats = loopLengthChoices[index];
-            deck.set(\loopOn, 1);
+
             deck.set(\loopBeats, beats);
+
+            // capturer la position de lecture AVANT d’activer le crossfade
             sendPulse.(deck, \loopTrig);
+
+            // activer la boucle une fois la position mémorisée
+            AppClock.sched(0, {
+                if(deck.notNil) { deck.set(\loopOn, 1) };
+            });
+
             statusLabel.string = "Loop ON";
             lengthLabel.string = "Durée boucle: " ++ loopLengthLabels[index];
         };
