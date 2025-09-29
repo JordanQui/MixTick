@@ -3,10 +3,10 @@ SynthDef(\bufferPlayer, {
     |out=0, bufnum=0, trig=1, pitch=1, amp=0.5,
      low=0, mid1=0, mid2=0, high=0,
      cue=0, cuegain=1,
-     loopOn=0, bpm=120, loopTrig=0,
+     loopOn=0, bpm=120, loopTrig=0, loopBeats=4,
      smoothTime=0.03, fadeTime=0.12| // fadeTime = fondu aux bords de la boucle
 
-    var bufFrames, rate, measureDurSec, measureFrames;
+    var bufFrames, rate, beatDurSec, loopDurSec, loopFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
     var sigNormal, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
@@ -17,10 +17,12 @@ SynthDef(\bufferPlayer, {
     bufFrames = BufFrames.kr(bufnum);
     rate = BufRateScale.kr(bufnum) * pitch;
 
-    // === Durée d'une mesure en frames (4 temps) ===
-    measureDurSec = (60 / bpm) * 4;
-    // ajuster la longueur de mesure selon le pitch pour garder une durée fixe
-    measureFrames = measureDurSec * BufSampleRate.kr(bufnum) * pitch;
+    // === Durée de boucle en frames ===
+    beatDurSec = 60 / bpm;
+    loopBeats = loopBeats.max(1); // sécurité contre les valeurs nulles
+    loopDurSec = beatDurSec * loopBeats;
+    // ajuster la longueur de boucle selon le pitch pour garder une durée fixe
+    loopFrames = loopDurSec * BufSampleRate.kr(bufnum) * pitch;
 
     // === Trigger pour relancer la boucle ===
     trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
@@ -35,7 +37,7 @@ SynthDef(\bufferPlayer, {
 
     // === Points de boucle latched sur le trigger ===
     loopStart = Latch.kr(phasorNormal, trigImpulse);
-    loopEnd   = loopStart + measureFrames;
+    loopEnd   = loopStart + loopFrames;
 
     // === Phasor en mode boucle ===
     phasorLoop = Phasor.ar(
