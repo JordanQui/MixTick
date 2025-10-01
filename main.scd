@@ -6,7 +6,6 @@ s.options.numBuffers = 2048;
 s.options.numWireBufs = 64;
 s.options.numOutputBusChannels = 2;
 s.options.numInputBusChannels = 2;
-s.options.maxNodes = 1024;
 
 // ======================
 // Pitch de départ
@@ -51,7 +50,7 @@ s.options.maxNodes = 1024;
                         // synchro avec le transport (si le synth est actif)
                         if(deck.isPlaying) {
                             deck.set(\trig, 1);
-                            AppClock.sched(0.01, {
+                            AppClock.sched(0.001, {
                                 if(deck.isPlaying) { deck.set(\trig, 0) }
                             });
                         };
@@ -112,14 +111,6 @@ s.options.maxNodes = 1024;
             ~beatDur.wait;
         }
     }).play(SystemClock);
-
-    // ======================
-    // Exemple d’appels
-    // ======================
-    // ~loadTrack.(0, ~deck1, \deck1);
-    // ~loadTrack.(1, ~deck2, \deck2);
-    // ~loadTrack.(2, ~deck3, \deck3);
-    // ~loadTrack.(3, ~deck4, \deck4);
 };
 
 // ======================
