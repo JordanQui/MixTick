@@ -1,3 +1,21 @@
+~deckKeys = ~deckKeys ? [\deck1, \deck2, \deck3, \deck4];
+~loopPositions = ~loopPositions ? IdentityDictionary.new;
+~loopPositionOSC.notNil.if({ ~loopPositionOSC.free; });
+~loopPositionOSC = OSCdef(\mixTickLoopPosition, { |msg|
+    var deckId = msg[2];
+    var loopStart = msg[3];
+    var loopEnd = msg[4];
+    var key = if(deckId.isKindOf(Integer) and: {
+        deckId > 0 and: { deckId <= ~deckKeys.size }
+    }) {
+        ~deckKeys[deckId - 1]
+    } { nil };
+
+    if(key.notNil) {
+        ~loopPositions[key] = [loopStart, loopEnd];
+    };
+}, '/loopPosition').permanent_(true);
+
 ~createUI = {
     var window, bufferNames,
     textDeck1, textDeck2, textDeck3, textDeck4,
@@ -12,7 +30,14 @@
         view.background_(Color.black).stringColor_(Color.white);
     };
 
-    var resyncDeck = { |deck|
+    var resyncDeck = { |deck, key|
+        var loopData = ~loopPositions[key];
+        var targetPos = if(loopData.notNil) { loopData[0] } { 0 };
+
+        deck.set(\normalResetPos, targetPos);
+        deck.set(\normalResetTrig, 1);
+        AppClock.sched(0.01, { deck.set(\normalResetTrig, 0) });
+
         deck.set(\trig, 1);
         AppClock.sched(0.01, { deck.set(\trig, 0) });
     };
@@ -72,7 +97,7 @@
         });
         resyncButton1 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
-        .action_({ resyncDeck.(~deck1) });
+        .action_({ resyncDeck.(~deck1, \deck1) });
 
     // --- Deck 2 ---
     textDeck2 = StaticText(window).string_("Player X Buffer:"); applyDarkStyle.(textDeck2);
@@ -102,7 +127,7 @@
         });
         resyncButton2 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
-        .action_({ resyncDeck.(~deck2) });
+        .action_({ resyncDeck.(~deck2, \deck2) });
 
     // --- Deck 3 ---
     textDeck3 = StaticText(window).string_("Player Z Buffer:"); applyDarkStyle.(textDeck3);
@@ -132,7 +157,7 @@
         });
         resyncButton3 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
-        .action_({ resyncDeck.(~deck3) });
+        .action_({ resyncDeck.(~deck3, \deck3) });
 
     // --- Deck 4 ---
     textDeck4 = StaticText(window).string_("Player W Buffer:"); applyDarkStyle.(textDeck4);
@@ -162,7 +187,7 @@
         });
         resyncButton4 = Button(window)
         .states_([["Resync", Color.white, Color.black]])
-        .action_({ resyncDeck.(~deck4) });
+        .action_({ resyncDeck.(~deck4, \deck4) });
 
     // --- Scope ---
     freqscope = FreqScopeView(window);
