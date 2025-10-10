@@ -45,7 +45,7 @@ SynthDef(\bufferPlayer, {
     normalResetPosFeed = LocalIn.kr(1).first;
 
     // === Réinitialisation externe du phasor normal ===
-    normalResetImpulse = HPZ1.kr(normalResetSignal).max(0);
+    normalResetImpulse = HPZ1.kr(normalResetTrig).max(0);
     normalResetPosClamped = Clip.kr(normalResetPos, 0, bufFrames);
 
     // === Phasor normal (lecture libre) ===
