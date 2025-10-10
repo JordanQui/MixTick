@@ -66,12 +66,22 @@ SynthDef(\bufferPlayer, {
     loopExitPos  = Latch.kr(loopTrackPos, loopOffTrig);
     loopExitPosWrap = loopExitPos.wrap(0, bufFrames);
 
+    // === Logs : entrée/sortie de boucle ===
+    Poll.kr(loopResetTrig, loopStart, "[Loop][Entry] start position");
+    Poll.kr(loopResetTrig, loopTrackPos, "[Loop][Entry] tracked position");
+    Poll.kr(loopOffTrig, loopExitPos, "[Loop][Exit] raw position");
+    Poll.kr(loopOffTrig, loopExitPosWrap, "[Loop][Exit] wrapped position");
+
     normalResetPosState = normalResetPosFeed;
     // Pendant une boucle on injecte la position globale suivie par loopTrackPos
     normalResetPosState = Select.kr(loopActive.asInteger, [normalResetPosState, loopTrackPos.wrap(0, bufFrames)]);
     normalResetPosState = Select.kr((resyncTrig > 0).asInteger, [normalResetPosState, 0]);
     normalResetPosState = Select.kr((loopOffTrig > 0).asInteger, [normalResetPosState, loopExitPosWrap]);
     normalResetPosState = Select.kr((normalResetImpulse > 0).asInteger, [normalResetPosState, normalResetPosClamped]);
+
+    // === Logs : injection dans le phasor normal ===
+    Poll.kr(loopOffTrig, normalResetPosState, "[Loop][Exit] normalResetPosState");
+    Poll.kr(loopOffTrig, A2K.kr(phasorNormal), "[Loop][Exit] phasorNormal value");
     LocalOut.kr(normalResetPosState);
 
     // === Phasor en mode boucle ===
