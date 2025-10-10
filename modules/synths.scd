@@ -4,7 +4,8 @@ SynthDef(\bufferPlayer, {
      low=0, mid1=0, mid2=0, high=0,
      cue=0, cuegain=1,
      loopOn=0, bpm=120, loopTrig=0,
-     smoothTime=0.03, fadeTime=0.12| // fadeTime = fondu aux bords de la boucle
+     smoothTime=0.03, fadeTime=0.12,
+     normalResetTrig=0, normalResetPos=0, deckId=0| // fadeTime = fondu aux bords de la boucle
 
     var bufFrames, rate, measureDurSec, measureFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
@@ -12,9 +13,13 @@ SynthDef(\bufferPlayer, {
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
+<<<<<<< HEAD
     var resyncTrig, loopOffTrig, loopTrackPos, loopExitPos, loopExitPosWrap;
     var normalResetTrig, normalResetPosState, normalResetPosFeed;
     var loopStartTrig, loopActive, gatedResyncTrig, loopResetTrig;
+=======
+    var normalResetImpulse, normalResetPosClamped;
+>>>>>>> refs/remotes/origin/main
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -42,19 +47,32 @@ SynthDef(\bufferPlayer, {
     normalResetTrig = resyncTrig + loopOffTrig;
     normalResetPosFeed = LocalIn.kr(1).first;
 
+    // === Réinitialisation externe du phasor normal ===
+    normalResetImpulse = HPZ1.kr(normalResetTrig).max(0);
+    normalResetPosClamped = Clip.kr(normalResetPos, 0, bufFrames);
+
     // === Phasor normal (lecture libre) ===
     phasorNormal = Phasor.ar(
+<<<<<<< HEAD
         trig: DelayN.kr(normalResetTrig, ControlDur.ir, ControlDur.ir),
         rate: rate,
         start: 0,
         end: bufFrames,
         resetPos: normalResetPosFeed
+=======
+        trig: normalResetImpulse,
+        rate: rate,
+        start: 0,
+        end: bufFrames,
+        resetPos: normalResetPosClamped
+>>>>>>> refs/remotes/origin/main
     );
 
     // === Points de boucle latched sur le trigger ===
     loopStart = Latch.kr(phasorNormal, loopResetTrig);
     loopEnd   = loopStart + measureFrames;
 
+<<<<<<< HEAD
     // === Tracking de la position globale pendant la boucle ===
     loopTrackPos = loopStart + Sweep.kr(loopResetTrig, rate * SampleRate.ir * loopOnLag);
     loopExitPos  = Latch.kr(loopTrackPos, loopOffTrig);
@@ -66,6 +84,10 @@ SynthDef(\bufferPlayer, {
     normalResetPosState = Select.kr((resyncTrig > 0).asInteger, [normalResetPosState, 0]);
     normalResetPosState = Select.kr((loopOffTrig > 0).asInteger, [normalResetPosState, loopExitPosWrap]);
     LocalOut.kr(normalResetPosState);
+=======
+    // === Feedback position boucle pour l'UI ===
+    SendReply.kr(trigImpulse, '/loopPosition', [loopStart, loopEnd], deckId);
+>>>>>>> refs/remotes/origin/main
 
     // === Phasor en mode boucle ===
     phasorLoop = Phasor.ar(
