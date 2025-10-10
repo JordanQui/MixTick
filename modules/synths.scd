@@ -7,12 +7,13 @@ SynthDef(\bufferPlayer, {
      smoothTime=0.03, fadeTime=0.12| // fadeTime = fondu aux bords de la boucle
 
     var bufFrames, rate, beatDurSec, loopDurSec, loopFrames;
-    var phasorNormal, loopStart, loopEnd, phasorLoop;
+    var phasorNormal, loopStart, loopEnd, phasorLoop, loopStartMem;
     var sigNormal, sigLoopRaw, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
-    var trigImpulse, crossEnv, trigEvents;
+    var trigImpulse, crossEnv, trigEvents, crossEvents;
     var loopCaptureTrig, loopCaptureImpulse;
+    var normalResetTrig, normalResetImpulse, loopOffTrig, loopOffImpulse;
     var fadeSafeTime, loopDelayed, retrigEnv;
 
     // === Infos buffer ===
@@ -27,20 +28,31 @@ SynthDef(\bufferPlayer, {
     loopFrames = loopDurSec * BufSampleRate.kr(bufnum) * pitch;
 
     // === Trigger pour relancer la boucle ===
+    normalResetTrig = HPZ1.kr(trig).max(0);
     loopCaptureTrig = HPZ1.kr(loopTrig).max(0);
+    // Détecter la sortie de boucle (front descendant de loopOn)
+    loopOffTrig = HPZ1.kr(loopOn).min(0).abs;
     loopCaptureImpulse = Trig1.kr(loopCaptureTrig, 0.001);
-    trigEvents = HPZ1.kr(trig).max(0) + loopCaptureTrig;
+    normalResetImpulse = Trig1.kr(normalResetTrig, 0.001);
+    loopOffImpulse = Trig1.kr(loopOffTrig, 0.001);
+    trigEvents = normalResetTrig + loopCaptureTrig;
     trigImpulse = Trig1.kr(trigEvents, 0.001);
 
     // === Phasor normal (lecture libre) ===
+    // Mémoire locale pour récupérer la dernière position de boucle enregistrée
+    loopStartMem = LocalIn.kr(1);
+    // Repartir du début de la boucle capturée lorsqu'on quitte le mode loop
     phasorNormal = Phasor.ar(
+        trig: normalResetImpulse + loopOffImpulse,
         rate: rate,
         start: 0,
-        end: bufFrames
+        end: bufFrames,
+        resetPos: loopOffImpulse * loopStartMem[0]
     );
 
     // === Points de boucle latched sur le trigger ===
     loopStart = Latch.kr(phasorNormal, loopCaptureImpulse);
+    LocalOut.kr(loopStart);
     loopEnd   = loopStart + loopFrames;
 
     // === Phasor en mode boucle ===
@@ -76,7 +88,9 @@ SynthDef(\bufferPlayer, {
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
 
     // === Anti-clic supplémentaire lors d’un changement de trig ===
-    crossEnv = LagUD.kr(trigEvents, smoothTime, smoothTime);
+    // Inclure la sortie de boucle dans la protection anti-clic
+    crossEvents = trigEvents + loopOffTrig;
+    crossEnv = LagUD.kr(crossEvents, smoothTime, smoothTime);
     sig = (sig * (1 - crossEnv)) + (sigLoop * crossEnv);
 
     // === EQ ===
