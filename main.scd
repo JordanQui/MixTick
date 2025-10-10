@@ -27,7 +27,7 @@ s.options.numInputBusChannels = 2;
     ~bpm = 135 * ~pitch;
 
     // --- fichiers disponibles ---
-    ~files = PathName("/Users/jordanquiqueret/Works/tracks").entries;
+    ~files = PathName("/Volumes/BANK/TRACKS").entries;
 
     // --- dictionnaire : deckName -> buffer actuel ---
     ~deckBuffers = IdentityDictionary.new;
