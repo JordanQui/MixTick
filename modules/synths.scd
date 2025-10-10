@@ -10,7 +10,7 @@ SynthDef(\bufferPlayer, {
     var phasorNormal, loopStart, loopEnd, phasorLoop, loopStartMem, loopResumeMem;
     var sigNormal, sigLoopRaw, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
-    var loopOnLag, loopOnLagAudio, fadeEnvNormal, loopMixEnv;
+    var loopOnLagAmp, loopOnLagPhase, loopOnLagPhaseAudio, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents, crossEvents;
     var loopCaptureTrig, loopCaptureImpulse;
     var normalResetTrig, normalResetImpulse, loopOffTrig, loopOffImpulse;
@@ -40,8 +40,10 @@ SynthDef(\bufferPlayer, {
     trigEvents = normalResetTrig + loopCaptureTrig;
     trigImpulse = Trig1.kr(trigEvents, 0.001);
 
-    loopOnLag     = LagUD.kr(loopOn, fadeTime, fadeTime);
-    loopOnLagAudio = K2A.ar(loopOnLag);
+    loopOnLagAmp       = LagUD.kr(loopOn, fadeTime, fadeTime);
+    // Phase reprend immédiatement la lecture libre quand on sort de la boucle
+    loopOnLagPhase     = LagUD.kr(loopOn, fadeTime, 0.001);
+    loopOnLagPhaseAudio = K2A.ar(loopOnLagPhase);
 
     // === Phasor normal (lecture libre) ===
     // Mémoire locale pour récupérer la dernière position de boucle enregistrée
@@ -79,7 +81,7 @@ SynthDef(\bufferPlayer, {
     LocalOut.kr([loopStart, loopResumePos]);
 
     // Lecture "normale" calée sur la position globale même en boucle
-    phasorNormalTarget = phasorNormal + loopOnLagAudio * (K2A.ar(loopGlobalPos) - phasorNormal);
+    phasorNormalTarget = phasorNormal + loopOnLagPhaseAudio * (K2A.ar(loopGlobalPos) - phasorNormal);
 
     // === Lecture audio ===
     sigNormal   = BufRd.ar(2, bufnum, phasorNormalTarget, loop: 1);
@@ -99,8 +101,8 @@ SynthDef(\bufferPlayer, {
     sigLoop      = (sigLoopRaw * (1 - retrigEnv)) + (loopDelayed * retrigEnv);
 
     // === Crossfade normal <-> loop ===
-    fadeEnvNormal = (1 - loopOnLag);
-    loopMixEnv    = loopOnLag;
+    fadeEnvNormal = (1 - loopOnLagAmp);
+    loopMixEnv    = loopOnLagAmp;
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
 
     // === Anti-clic supplémentaire lors d’un changement de trig ===
