@@ -13,13 +13,10 @@ SynthDef(\bufferPlayer, {
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
-<<<<<<< HEAD
     var resyncTrig, loopOffTrig, loopTrackPos, loopExitPos, loopExitPosWrap;
-    var normalResetTrig, normalResetPosState, normalResetPosFeed;
+    var normalResetSignal, normalResetPosState, normalResetPosFeed;
     var loopStartTrig, loopActive, gatedResyncTrig, loopResetTrig;
-=======
     var normalResetImpulse, normalResetPosClamped;
->>>>>>> refs/remotes/origin/main
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -44,16 +41,16 @@ SynthDef(\bufferPlayer, {
     trigEvents = loopResetTrig + loopOffTrig;
 
     // === Gestion des resets du phasor normal ===
-    normalResetTrig = resyncTrig + loopOffTrig;
+    normalResetSignal = resyncTrig + loopOffTrig + normalResetTrig;
     normalResetPosFeed = LocalIn.kr(1).first;
 
     // === Réinitialisation externe du phasor normal ===
-    normalResetImpulse = HPZ1.kr(normalResetTrig).max(0);
+    normalResetImpulse = HPZ1.kr(normalResetSignal).max(0);
     normalResetPosClamped = Clip.kr(normalResetPos, 0, bufFrames);
 
     // === Phasor normal (lecture libre) ===
     phasorNormal = Phasor.ar(
-        trig: DelayN.kr(normalResetTrig, ControlDur.ir, ControlDur.ir),
+        trig: DelayN.kr(normalResetSignal, ControlDur.ir, ControlDur.ir),
         rate: rate,
         start: 0,
         end: bufFrames,
@@ -74,6 +71,7 @@ SynthDef(\bufferPlayer, {
     normalResetPosState = Select.kr(loopActive.asInteger, [normalResetPosState, loopTrackPos.wrap(0, bufFrames)]);
     normalResetPosState = Select.kr((resyncTrig > 0).asInteger, [normalResetPosState, 0]);
     normalResetPosState = Select.kr((loopOffTrig > 0).asInteger, [normalResetPosState, loopExitPosWrap]);
+    normalResetPosState = Select.kr((normalResetImpulse > 0).asInteger, [normalResetPosState, normalResetPosClamped]);
     LocalOut.kr(normalResetPosState);
 
     // === Phasor en mode boucle ===
