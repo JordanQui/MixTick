@@ -9,11 +9,14 @@ SynthDef(\bufferPlayer, {
 
     var bufFrames, rate, measureDurSec, measureFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
+    var loopResetTrigAR, loopStartAR;
+    var loopTrackPosAR, loopTrackPos, loopTrackPosWrap;
+    var loopExitPosAR, loopExitPos, loopExitPosWrap;
     var sigNormal, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
-    var resyncTrig, loopOffTrig, loopTrackPos, loopExitPos, loopExitPosWrap;
+    var resyncTrig, loopOffTrig;
     var normalResetSignal, normalResetPosState, normalResetPosFeed;
     var loopStartTrig, loopActive, gatedResyncTrig, loopResetTrig;
     var normalResetImpulse, normalResetPosClamped;
@@ -62,9 +65,15 @@ SynthDef(\bufferPlayer, {
     loopEnd   = loopStart + measureFrames;
 
     // === Tracking de la position globale pendant la boucle ===
-    loopTrackPos = loopStart + Sweep.kr(loopResetTrig, rate * SampleRate.ir * loopOnLag);
-    loopExitPos  = Latch.kr(loopTrackPos, loopOffTrig);
-    loopExitPosWrap = loopExitPos.wrap(0, bufFrames);
+    loopResetTrigAR = K2A.ar(loopResetTrig);
+    loopStartAR = K2A.ar(loopStart);
+    loopTrackPosAR = loopStartAR + Sweep.ar(loopResetTrigAR, rate * SampleRate.ir);
+    loopExitPosAR  = Latch.ar(loopTrackPosAR, K2A.ar(loopOffTrig));
+
+    loopTrackPos     = A2K.kr(loopTrackPosAR);
+    loopTrackPosWrap = A2K.kr(loopTrackPosAR.wrap(0, bufFrames));
+    loopExitPos      = A2K.kr(loopExitPosAR);
+    loopExitPosWrap  = A2K.kr(loopExitPosAR.wrap(0, bufFrames));
 
     // === Logs : entrée/sortie de boucle ===
     Poll.kr(loopResetTrig, loopStart, "[Loop][Entry] start position");
