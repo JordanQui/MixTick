@@ -7,15 +7,16 @@ SynthDef(\bufferPlayer, {
      smoothTime=0.03, fadeTime=0.12| // fadeTime = fondu aux bords de la boucle
 
     var bufFrames, rate, beatDurSec, loopDurSec, loopFrames;
-    var phasorNormal, loopStart, loopEnd, phasorLoop, loopStartMem;
+    var phasorNormal, loopStart, loopEnd, phasorLoop, loopStartMem, loopResumeMem;
     var sigNormal, sigLoopRaw, sigLoop, sig;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
-    var loopOnLag, fadeEnvNormal, loopMixEnv;
+    var loopOnLag, loopOnLagAudio, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents, crossEvents;
     var loopCaptureTrig, loopCaptureImpulse;
     var normalResetTrig, normalResetImpulse, loopOffTrig, loopOffImpulse;
     var fadeSafeTime, loopDelayed, retrigEnv;
-    var loopElapsed, loopElapsedCtrl, loopElapsedAtExit, loopResumePos;
+    var loopResumePos, phasorNormalTarget, phasorLoopCtrl;
+    var loopWrapPulse, loopTurnCount, loopWithinLoop, loopGlobalPos;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -39,29 +40,23 @@ SynthDef(\bufferPlayer, {
     trigEvents = normalResetTrig + loopCaptureTrig;
     trigImpulse = Trig1.kr(trigEvents, 0.001);
 
+    loopOnLag     = LagUD.kr(loopOn, fadeTime, fadeTime);
+    loopOnLagAudio = K2A.ar(loopOnLag);
+
     // === Phasor normal (lecture libre) ===
     // Mémoire locale pour récupérer la dernière position de boucle enregistrée
-    loopStartMem = LocalIn.kr(1);
-    // Calculer la position de reprise en lecture libre quand on quitte la boucle.
-    // On additionne au point de capture la durée réellement écoulée dans la boucle
-    // (qui intègre le nombre de tours) afin que la lecture normale reste calée
-    // sur le transport global.
-    loopElapsed       = Sweep.ar(loopCaptureImpulse, rate);
-    loopElapsedCtrl   = A2K.kr(loopElapsed);
-    loopElapsedAtExit = Latch.kr(loopElapsedCtrl, loopOffImpulse);
-    loopResumePos     = (loopStartMem + loopElapsedAtExit) % bufFrames;
+    #loopStartMem, loopResumeMem = LocalIn.kr(2);
 
     phasorNormal = Phasor.ar(
         trig: normalResetImpulse + loopOffImpulse,
         rate: rate,
         start: 0,
         end: bufFrames,
-        resetPos: Select.kr(loopOffTrig, [0, loopResumePos])
+        resetPos: Select.kr(loopOffTrig, [0, loopResumeMem])
     );
 
     // === Points de boucle latched sur le trigger ===
     loopStart = Latch.kr(phasorNormal, loopCaptureImpulse);
-    LocalOut.kr(loopStart);
     loopEnd   = loopStart + loopFrames;
 
     // === Phasor en mode boucle ===
@@ -73,8 +68,21 @@ SynthDef(\bufferPlayer, {
         end: loopEnd
     );
 
+    // === Position globale pendant la boucle ===
+    phasorLoopCtrl  = A2K.kr(phasorLoop);
+    loopWrapPulse   = HPZ1.kr(phasorLoopCtrl - loopStart).min(0).abs;
+    loopTurnCount   = PulseCount.kr(loopWrapPulse, loopCaptureTrig + loopOffTrig);
+    loopWithinLoop  = (phasorLoopCtrl - loopStart).clip(0, loopFrames);
+    loopGlobalPos   = (loopStartMem + (loopTurnCount * loopFrames) + loopWithinLoop) % bufFrames;
+    loopResumePos   = Latch.kr(loopGlobalPos, loopOffImpulse);
+    // mémoriser la position capturée et la future reprise globale
+    LocalOut.kr([loopStart, loopResumePos]);
+
+    // Lecture "normale" calée sur la position globale même en boucle
+    phasorNormalTarget = phasorNormal + loopOnLagAudio * (K2A.ar(loopGlobalPos) - phasorNormal);
+
     // === Lecture audio ===
-    sigNormal   = BufRd.ar(2, bufnum, phasorNormal, loop: 1);
+    sigNormal   = BufRd.ar(2, bufnum, phasorNormalTarget, loop: 1);
     sigLoopRaw  = BufRd.ar(2, bufnum, phasorLoop, loop: 1);
 
     // === Fade sur les bords de la boucle ===
@@ -91,7 +99,6 @@ SynthDef(\bufferPlayer, {
     sigLoop      = (sigLoopRaw * (1 - retrigEnv)) + (loopDelayed * retrigEnv);
 
     // === Crossfade normal <-> loop ===
-    loopOnLag     = LagUD.kr(loopOn, fadeTime, fadeTime);
     fadeEnvNormal = (1 - loopOnLag);
     loopMixEnv    = loopOnLag;
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
