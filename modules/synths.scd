@@ -42,12 +42,15 @@ SynthDef(\bufferPlayer, {
     // Mémoire locale pour récupérer la dernière position de boucle enregistrée
     loopStartMem = LocalIn.kr(1);
     // Repartir du début de la boucle capturée lorsqu'on quitte le mode loop
+    // Lorsque l’on sort du mode boucle, on relance la lecture libre depuis
+    // la position exacte déclenchée au moment du loopTrig (stockée dans
+    // loopStartMem). En dehors de ce cas, un trig normal revient au début.
     phasorNormal = Phasor.ar(
         trig: normalResetImpulse + loopOffImpulse,
         rate: rate,
         start: 0,
         end: bufFrames,
-        resetPos: loopOffImpulse * loopStartMem[0]
+        resetPos: Select.kr(loopOffTrig, [0, loopStartMem[0]])
     );
 
     // === Points de boucle latched sur le trigger ===
