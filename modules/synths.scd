@@ -14,6 +14,7 @@ SynthDef(\bufferPlayer, {
     var trigImpulse, crossEnv, trigEvents;
     var resyncTrig, loopOffTrig, loopTrackPos, loopExitPos, loopExitPosWrap;
     var normalResetTrig, normalResetPosState, normalResetPosFeed;
+    var loopStartTrig, loopActive, gatedResyncTrig, loopResetTrig;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -25,10 +26,17 @@ SynthDef(\bufferPlayer, {
     measureFrames = measureDurSec * BufSampleRate.kr(bufnum) * pitch;
 
     // === Trigger pour relancer la boucle ===
-    trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
-    trigImpulse = Trig1.kr(trigEvents, 0.001);
     resyncTrig  = Trig1.kr(HPZ1.kr(trig).max(0), 0.001);
+    loopStartTrig = Trig1.kr(HPZ1.kr(loopTrig).max(0), 0.001);
     loopOffTrig = Trig1.kr(HPZ1.kr(loopOn).min(0).abs, 0.001);
+
+    loopOnLag = LagUD.kr(loopOn, fadeTime, fadeTime);
+    loopActive = (loopOnLag > 0.5);
+    gatedResyncTrig = resyncTrig * (1 - loopActive);
+    loopResetTrig = loopStartTrig + gatedResyncTrig;
+
+    trigImpulse = loopResetTrig;
+    trigEvents = loopResetTrig + loopOffTrig;
 
     // === Gestion des resets du phasor normal ===
     normalResetTrig = resyncTrig + loopOffTrig;
@@ -44,13 +52,11 @@ SynthDef(\bufferPlayer, {
     );
 
     // === Points de boucle latched sur le trigger ===
-    loopStart = Latch.kr(phasorNormal, trigImpulse);
+    loopStart = Latch.kr(phasorNormal, loopResetTrig);
     loopEnd   = loopStart + measureFrames;
 
-    loopOnLag = LagUD.kr(loopOn, fadeTime, fadeTime);
-
     // === Tracking de la position globale pendant la boucle ===
-    loopTrackPos = loopStart + Sweep.kr(trigImpulse, rate * SampleRate.ir * loopOnLag);
+    loopTrackPos = loopStart + Sweep.kr(loopResetTrig, rate * SampleRate.ir * loopOnLag);
     loopExitPos  = Latch.kr(loopTrackPos, loopOffTrig);
     loopExitPosWrap = loopExitPos.wrap(0, bufFrames);
 
