@@ -15,6 +15,7 @@ SynthDef(\bufferPlayer, {
     var loopCaptureTrig, loopCaptureImpulse;
     var normalResetTrig, normalResetImpulse, loopOffTrig, loopOffImpulse;
     var fadeSafeTime, loopDelayed, retrigEnv;
+    var loopElapsed, loopElapsedCtrl, loopElapsedAtExit, loopResumePos;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -41,16 +42,21 @@ SynthDef(\bufferPlayer, {
     // === Phasor normal (lecture libre) ===
     // Mémoire locale pour récupérer la dernière position de boucle enregistrée
     loopStartMem = LocalIn.kr(1);
-    // Repartir du début de la boucle capturée lorsqu'on quitte le mode loop
-    // Lorsque l’on sort du mode boucle, on relance la lecture libre depuis
-    // la position exacte déclenchée au moment du loopTrig (stockée dans
-    // loopStartMem). En dehors de ce cas, un trig normal revient au début.
+    // Calculer la position de reprise en lecture libre quand on quitte la boucle.
+    // On additionne au point de capture la durée réellement écoulée dans la boucle
+    // (qui intègre le nombre de tours) afin que la lecture normale reste calée
+    // sur le transport global.
+    loopElapsed       = Sweep.ar(loopCaptureImpulse, rate);
+    loopElapsedCtrl   = A2K.kr(loopElapsed);
+    loopElapsedAtExit = Latch.kr(loopElapsedCtrl, loopOffImpulse);
+    loopResumePos     = (loopStartMem + loopElapsedAtExit) % bufFrames;
+
     phasorNormal = Phasor.ar(
         trig: normalResetImpulse + loopOffImpulse,
         rate: rate,
         start: 0,
         end: bufFrames,
-        resetPos: Select.kr(loopOffTrig, [0, loopStartMem])
+        resetPos: Select.kr(loopOffTrig, [0, loopResumePos])
     );
 
     // === Points de boucle latched sur le trigger ===
