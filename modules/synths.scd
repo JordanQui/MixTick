@@ -12,6 +12,8 @@ SynthDef(\bufferPlayer, {
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
+    var resyncTrig, loopOffTrig, loopTrackPos, loopExitPos, loopExitPosWrap;
+    var normalResetTrig, normalResetPos, normalResetPosFeed;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -25,17 +27,35 @@ SynthDef(\bufferPlayer, {
     // === Trigger pour relancer la boucle ===
     trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
     trigImpulse = Trig1.kr(trigEvents, 0.001);
+    resyncTrig  = Trig1.kr(HPZ1.kr(trig).max(0), 0.001);
+    loopOffTrig = Trig1.kr(HPZ1.kr(loopOn).min(0).abs, 0.001);
+
+    // === Gestion des resets du phasor normal ===
+    normalResetTrig = resyncTrig + loopOffTrig;
+    normalResetPosFeed = LocalIn.kr(1).first;
 
     // === Phasor normal (lecture libre) ===
     phasorNormal = Phasor.ar(
+        trig: DelayN.kr(normalResetTrig, ControlDur.ir, ControlDur.ir),
         rate: rate,
         start: 0,
-        end: bufFrames
+        end: bufFrames,
+        resetPos: normalResetPosFeed
     );
 
     // === Points de boucle latched sur le trigger ===
     loopStart = Latch.kr(phasorNormal, trigImpulse);
     loopEnd   = loopStart + measureFrames;
+
+    loopOnLag = LagUD.kr(loopOn, fadeTime, fadeTime);
+
+    // === Tracking de la position globale pendant la boucle ===
+    loopTrackPos = loopStart + Sweep.kr(trigImpulse, rate * SampleRate.ir * loopOnLag);
+    loopExitPos  = Latch.kr(loopTrackPos, loopOffTrig);
+    loopExitPosWrap = loopExitPos.wrap(0, bufFrames);
+
+    normalResetPos = Select.kr((loopOffTrig > 0).asInteger, [0, loopExitPosWrap]);
+    LocalOut.kr(normalResetPos);
 
     // === Phasor en mode boucle ===
     phasorLoop = Phasor.ar(
@@ -58,7 +78,6 @@ SynthDef(\bufferPlayer, {
     sigLoop = sigLoop * fadeEnvLoop;
 
     // === Crossfade normal <-> loop ===
-    loopOnLag     = LagUD.kr(loopOn, fadeTime, fadeTime);
     fadeEnvNormal = (1 - loopOnLag);
     loopMixEnv    = loopOnLag;
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
