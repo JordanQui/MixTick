@@ -13,7 +13,7 @@ SynthDef(\bufferPlayer, {
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
     var resyncTrig, loopOffTrig, loopTrackPos, loopExitPos, loopExitPosWrap;
-    var normalResetTrig, normalResetPos, normalResetPosFeed;
+    var normalResetTrig, normalResetPosState, normalResetPosFeed;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -54,8 +54,10 @@ SynthDef(\bufferPlayer, {
     loopExitPos  = Latch.kr(loopTrackPos, loopOffTrig);
     loopExitPosWrap = loopExitPos.wrap(0, bufFrames);
 
-    normalResetPos = Select.kr((loopOffTrig > 0).asInteger, [0, loopExitPosWrap]);
-    LocalOut.kr(normalResetPos);
+    normalResetPosState = normalResetPosFeed;
+    normalResetPosState = Select.kr((resyncTrig > 0).asInteger, [normalResetPosState, 0]);
+    normalResetPosState = Select.kr((loopOffTrig > 0).asInteger, [normalResetPosState, loopExitPosWrap]);
+    LocalOut.kr(normalResetPosState);
 
     // === Phasor en mode boucle ===
     phasorLoop = Phasor.ar(
