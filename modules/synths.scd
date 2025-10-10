@@ -50,7 +50,7 @@ SynthDef(\bufferPlayer, {
         rate: rate,
         start: 0,
         end: bufFrames,
-        resetPos: Select.kr(loopOffTrig, [0, loopStartMem[0]])
+        resetPos: Select.kr(loopOffTrig, [0, loopStartMem])
     );
 
     // === Points de boucle latched sur le trigger ===
