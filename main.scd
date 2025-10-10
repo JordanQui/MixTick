@@ -47,6 +47,10 @@ s.options.numInputBusChannels = 2;
                         ~deckBuffers[key] = newBuf;
                         deck.set(\bufnum, newBuf.bufnum);
 
+                        if(~loopPositions.notNil) {
+                            ~loopPositions[key] = nil;
+                        };
+
                         // synchro avec le transport (si le synth est actif)
                         if(deck.isPlaying) {
                             deck.set(\trig, 1);
@@ -84,10 +88,10 @@ s.options.numInputBusChannels = 2;
     ~limiter = Synth(\outputLimiter, [\input, ~outputBus, \out, 0]);
 
     // decks
-    ~deck1 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
-    ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
-    ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
-    ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus]);
+    ~deck1 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus, \deckId, 1]);
+    ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus, \deckId, 2]);
+    ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus, \deckId, 3]);
+    ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \bpm, ~bpm, \out, ~outputBus, \deckId, 4]);
     s.sync;
 
     // fenêtre audio

@@ -4,7 +4,8 @@ SynthDef(\bufferPlayer, {
      low=0, mid1=0, mid2=0, high=0,
      cue=0, cuegain=1,
      loopOn=0, bpm=120, loopTrig=0,
-     smoothTime=0.03, fadeTime=0.12| // fadeTime = fondu aux bords de la boucle
+     smoothTime=0.03, fadeTime=0.12,
+     normalResetTrig=0, normalResetPos=0, deckId=0| // fadeTime = fondu aux bords de la boucle
 
     var bufFrames, rate, measureDurSec, measureFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
@@ -12,6 +13,7 @@ SynthDef(\bufferPlayer, {
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
     var loopOnLag, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
+    var normalResetImpulse, normalResetPosClamped;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -26,16 +28,25 @@ SynthDef(\bufferPlayer, {
     trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
     trigImpulse = Trig1.kr(trigEvents, 0.001);
 
+    // === Réinitialisation externe du phasor normal ===
+    normalResetImpulse = HPZ1.kr(normalResetTrig).max(0);
+    normalResetPosClamped = Clip.kr(normalResetPos, 0, bufFrames);
+
     // === Phasor normal (lecture libre) ===
     phasorNormal = Phasor.ar(
+        trig: normalResetImpulse,
         rate: rate,
         start: 0,
-        end: bufFrames
+        end: bufFrames,
+        resetPos: normalResetPosClamped
     );
 
     // === Points de boucle latched sur le trigger ===
     loopStart = Latch.kr(phasorNormal, trigImpulse);
     loopEnd   = loopStart + measureFrames;
+
+    // === Feedback position boucle pour l'UI ===
+    SendReply.kr(trigImpulse, '/loopPosition', [loopStart, loopEnd], deckId);
 
     // === Phasor en mode boucle ===
     phasorLoop = Phasor.ar(
