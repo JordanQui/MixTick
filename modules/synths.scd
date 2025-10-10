@@ -61,6 +61,8 @@ SynthDef(\bufferPlayer, {
     loopExitPosWrap = loopExitPos.wrap(0, bufFrames);
 
     normalResetPosState = normalResetPosFeed;
+    // Pendant une boucle on injecte la position globale suivie par loopTrackPos
+    normalResetPosState = Select.kr(loopActive.asInteger, [normalResetPosState, loopTrackPos.wrap(0, bufFrames)]);
     normalResetPosState = Select.kr((resyncTrig > 0).asInteger, [normalResetPosState, 0]);
     normalResetPosState = Select.kr((loopOffTrig > 0).asInteger, [normalResetPosState, loopExitPosWrap]);
     LocalOut.kr(normalResetPosState);
