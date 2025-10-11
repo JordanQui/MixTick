@@ -21,7 +21,7 @@ s.options.maxNodes = 1024;
 ~mixTick = Routine {
 
     // --- fichiers disponibles ---
-    ~files = PathName("/Volumes/DJ/-tracks/-135").entries;
+    ~files = PathName("/Volumes/BANK/TRACKS").entries;
 
     // --- dictionnaire : deckName -> buffer actuel ---
     ~deckBuffers = IdentityDictionary.new;
