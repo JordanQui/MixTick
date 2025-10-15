@@ -82,12 +82,12 @@ MIDIdef.cc(\lowEQ1, { |val, num, chan, src|
 MIDIdef.cc(\mid1EQ1, { |val, num, chan, src|
     ~deck1.set(\mid1, val.linlin(0,127,-30,10));
 	val.postln;
-}, 100, chan: 0);
+}, 120, chan: 0);
 
 MIDIdef.cc(\mid2EQ1, { |val, num, chan, src|
     ~deck1.set(\mid2, val.linlin(0,127,-30,10));
 	val.postln;
-}, 3, chan: 0);
+}, 121, chan: 0);
 
 MIDIdef.cc(\highEQ1, { |val, num, chan, src|
     ~deck1.set(\high, val.linlin(0,127,-30,0));

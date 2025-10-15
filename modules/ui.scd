@@ -50,7 +50,7 @@
         ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck1, \deck1);   // ✅ synchro transport
     };
-    loopLabel1 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel1);
+    loopLabel1 = StaticText(window).string_("Free"); applyDarkStyle.(loopLabel1);
     loopSlider1 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
         .background_(Color.black).knobColor_(Color.white)
@@ -61,7 +61,7 @@
                 ~deck1.set(\loopTrig, 1);
                 AppClock.sched(0.01, { ~deck1.set(\loopTrig, 0) });
             };
-            loopLabel1.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
+            loopLabel1.string = if(val == 1) { "Looped" } { "Loop OFF" };
         });
 
     // --- Deck 2 ---
@@ -77,7 +77,7 @@
         ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck2, \deck2);
     };
-    loopLabel2 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel2);
+    loopLabel2 = StaticText(window).string_("Free"); applyDarkStyle.(loopLabel2);
     loopSlider2 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
         .background_(Color.black).knobColor_(Color.white)
@@ -88,7 +88,7 @@
                 ~deck2.set(\loopTrig, 1);
                 AppClock.sched(0.01, { ~deck2.set(\loopTrig, 0) });
             };
-            loopLabel2.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
+            loopLabel2.string = if(val == 1) { "Looped" } { "Loop OFF" };
         });
 
     // --- Deck 3 ---
@@ -104,7 +104,7 @@
         ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck3, \deck3);
     };
-    loopLabel3 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel3);
+    loopLabel3 = StaticText(window).string_("Free"); applyDarkStyle.(loopLabel3);
     loopSlider3 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
         .background_(Color.black).knobColor_(Color.white)
@@ -115,7 +115,7 @@
                 ~deck3.set(\loopTrig, 1);
                 AppClock.sched(0.01, { ~deck3.set(\loopTrig, 0) });
             };
-            loopLabel3.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
+            loopLabel3.string = if(val == 1) { "Looped" } { "Loop OFF" };
         });
 
     // --- Deck 4 ---

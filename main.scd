@@ -23,9 +23,9 @@ s.options.maxNodes = 1024;
 // ~pitch = 0.840896415;    // 113.52 Hz — A
 // ~pitch = 0.890898718;    // 120.27 Hz — Bb
 // ~pitch = 0.943874313;    // 127.42 Hz — B
-~pitch = 1.0;            // 135.00 Hz — C ref
+// ~pitch = 1.0;            // 135.00 Hz — C ref
 // ~pitch = 1.059463094;    // 142.98 Hz — C#
-// ~pitch = 1.122462;       // 151.53 Hz — D
+~pitch = 1.122462;          // 151.53 Hz — D
 
 ~environementPath = PathName.new(thisProcess.nowExecutingPath).pathOnly;
 
