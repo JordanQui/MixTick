@@ -131,7 +131,7 @@
         ~refreshAllMenus.();
         ~loadTrack.(idx, ~deck4, \deck4);
     };
-    loopLabel4 = StaticText(window).string_("Loop OFF"); applyDarkStyle.(loopLabel4);
+    loopLabel4 = StaticText(window).string_("Free"); applyDarkStyle.(loopLabel4);
     loopSlider4 = Slider(window)
         .orientation_(\horizontal).minHeight_(100).thumbSize_(200).step_(1)
         .background_(Color.black).knobColor_(Color.white)
@@ -142,7 +142,7 @@
                 ~deck4.set(\loopTrig, 1);
                 AppClock.sched(0.01, { ~deck4.set(\loopTrig, 0) });
             };
-            loopLabel4.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
+            loopLabel4.string = if(val == 1) { "Looped" } { "Loop OFF" };
         });
 
     // --- Scope ---
