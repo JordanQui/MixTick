@@ -10,7 +10,8 @@ SynthDef(\bufferPlayer, {
     var bufFrames, baseRate, halfRate, measureDurSec, measureFrames;
     var fadeFrames, loopOnLag, fadeEnvNormal, loopMixEnv, crossEnv;
     var trigImpulse, trigEvents, speedLag;
-    var makePlayer, sigNormal, sigHalf, sig;
+    var makePlayer, sigNormalData, sigHalfData, sigNormal, sigHalf, sig;
+    var halfSyncTrig, halfSyncPos;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -32,24 +33,28 @@ SynthDef(\bufferPlayer, {
     loopMixEnv    = loopOnLag;
     crossEnv      = Lag.kr(trigEvents, smoothTime);
 
-    makePlayer = { |rate|
+    makePlayer = { |rate, syncTrig = 0, syncPos = 0|
         var phasorFree, loopStart, loopEnd, phasorLoop;
         var sigFree, sigLoop, fadeInLoop, fadeOutLoop, fadeEnvLoop, mix;
+        var combinedTrig;
 
         // === Phasor normal (lecture libre) ===
         phasorFree = Phasor.ar(
+            trig: syncTrig,
             rate: rate,
             start: 0,
-            end: bufFrames
+            end: bufFrames,
+            resetPos: syncPos
         );
 
         // === Points de boucle latched sur le trigger ===
-        loopStart = Latch.kr(phasorFree, trigImpulse);
+        combinedTrig = trigImpulse + syncTrig;
+        loopStart = Latch.kr(phasorFree, combinedTrig);
         loopEnd   = loopStart + measureFrames;
 
         // === Phasor en mode boucle ===
         phasorLoop = Phasor.ar(
-            trig: trigImpulse,
+            trig: combinedTrig,
             resetPos: loopStart,
             rate: rate,
             start: loopStart,
@@ -71,11 +76,18 @@ SynthDef(\bufferPlayer, {
 
         // === Anti-clic supplémentaire lors d’un changement de trig ===
         mix = (mix * (1 - crossEnv)) + (sigLoop * crossEnv);
-        mix;
+        [mix, phasorFree]
     };
 
-    sigNormal = makePlayer.(baseRate);
-    sigHalf   = makePlayer.(halfRate);
+    // === Resynchronisation demi-vitesse sur bascule ===
+    halfSyncTrig = Trig1.kr(HPZ1.kr(speedMix).max(0), 0.001);
+
+    sigNormalData = makePlayer.(baseRate);
+    sigNormal = sigNormalData[0];
+
+    halfSyncPos = Latch.kr(sigNormalData[1], halfSyncTrig);
+    sigHalfData = makePlayer.(halfRate, halfSyncTrig, halfSyncPos);
+    sigHalf = sigHalfData[0];
 
     // === Crossfade vitesse normale / demi-vitesse ===
     speedLag = Lag.kr(speedMix, 0.1);
