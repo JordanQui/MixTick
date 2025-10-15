@@ -29,6 +29,22 @@ s.options.maxNodes = 1024;
     // --- fichiers disponibles ---
     ~files = PathName("/Volumes/BANK/TRACKS").entries;
 
+    // --- gestion pitch decks ---
+    ~deckBasePitch = IdentityDictionary.new;
+    ~deckSpeedState = IdentityDictionary.new;
+    [\deck1, \deck2, \deck3, \deck4].do { |key|
+        ~deckBasePitch[key] = ~pitch;
+        ~deckSpeedState[key] = false;
+    };
+
+    ~applyDeckSpeedState = { |deck, deckKey|
+        var basePitch = ~deckBasePitch[deckKey] ? ~pitch;
+        var isHalfSpeed = ~deckSpeedState[deckKey] ? false;
+        if(deck.notNil) {
+            deck.set(\pitch, if(isHalfSpeed) { basePitch * 0.5 } { basePitch });
+        };
+    };
+
     // --- dictionnaire : deckName -> buffer actuel ---
     ~deckBuffers = IdentityDictionary.new;
 
@@ -88,6 +104,10 @@ s.options.maxNodes = 1024;
     ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
     ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
     ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
+    [~deck1, ~deck2, ~deck3, ~deck4].do { |deck, i|
+        var deckKey = [\deck1, \deck2, \deck3, \deck4][i];
+        ~applyDeckSpeedState.(deck, deckKey);
+    };
     s.sync;
 
     // fenêtre audio
