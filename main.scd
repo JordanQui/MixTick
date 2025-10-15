@@ -11,7 +11,7 @@ s.options.maxNodes = 1024;
 // ======================
 // Pitch de départ
 // ======================
-// ~pitch = 0.5;            // 67.50 Hz — C (une octave sous le C de référence)
+// ~pitch = 0.5;            // 67.50 Hz — C
 // ~pitch = 0.529732;       // 71.51 Hz — C# / Db
 // ~pitch = 0.561231;       // 75.77 Hz — D
 // ~pitch = 0.594604;       // 80.27 Hz — D# / Eb
@@ -23,7 +23,7 @@ s.options.maxNodes = 1024;
 // ~pitch = 0.840896415;    // 113.52 Hz — A
 // ~pitch = 0.890898718;    // 120.27 Hz — Bb
 // ~pitch = 0.943874313;    // 127.42 Hz — B
-~pitch = 1.0;            // 135.00 Hz — C (référence)
+~pitch = 1.0;            // 135.00 Hz — C ref
 // ~pitch = 1.059463094;    // 142.98 Hz — C#
 // ~pitch = 1.122462;       // 151.53 Hz — D
 
