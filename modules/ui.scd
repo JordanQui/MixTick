@@ -10,8 +10,8 @@
     var createSpeedButton;
 
     var applyDarkStyle = { |view|
-        view.background = Color.black;
-        view.stringColor = Color.white;
+        view.tryPerform(\background_, Color.black);
+        view.tryPerform(\stringColor_, Color.white);
     };
 
     bufferNames = ~files.collect { |file| file.fileName };
@@ -50,7 +50,7 @@
                 ~applyDeckSpeedState.(deck, deckKey);
             });
 
-        button.stringColor = Color.white;
+        button.tryPerform(\stringColor_, Color.white);
 
         button.value = if(isHalfSpeed) { 1 } { 0 };
         ~applyDeckSpeedState.(deckFunc.value, deckKey);
@@ -88,7 +88,7 @@
         .font_(Font("Helvetica", 35))
         .items_(~getDisplayNames.())
         .background_(Color.black);
-    listDeck1.stringColor = Color.white;
+    listDeck1.tryPerform(\stringColor_, Color.white);
     listDeck1.action = { |menu|
         var idx = menu.value;
         ~playedFlags[idx] = true;
@@ -116,7 +116,7 @@
         .font_(Font("Helvetica", 35))
         .items_(~getDisplayNames.())
         .background_(Color.black);
-    listDeck2.stringColor = Color.white;
+    listDeck2.tryPerform(\stringColor_, Color.white);
     listDeck2.action = { |menu|
         var idx = menu.value;
         ~playedFlags[idx] = true;
@@ -144,7 +144,7 @@
         .font_(Font("Helvetica", 35))
         .items_(~getDisplayNames.())
         .background_(Color.black);
-    listDeck3.stringColor = Color.white;
+    listDeck3.tryPerform(\stringColor_, Color.white);
     listDeck3.action = { |menu|
         var idx = menu.value;
         ~playedFlags[idx] = true;
@@ -172,7 +172,7 @@
         .font_(Font("Helvetica", 35))
         .items_(~getDisplayNames.())
         .background_(Color.black);
-    listDeck4.stringColor = Color.white;
+    listDeck4.tryPerform(\stringColor_, Color.white);
     listDeck4.action = { |menu|
         var idx = menu.value;
         ~playedFlags[idx] = true;
