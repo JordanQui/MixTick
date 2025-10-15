@@ -4,13 +4,56 @@
     listDeck1, listDeck2, listDeck3, listDeck4,
     loopSlider1, loopLabel1, loopSlider2, loopLabel2,
     loopSlider3, loopLabel3, loopSlider4, loopLabel4,
+    speedButton1, speedButton2, speedButton3, speedButton4,
     freqscope;
+
+    var createSpeedButton;
 
     var applyDarkStyle = { |view|
         view.background_(Color.black).stringColor_(Color.white);
     };
 
     bufferNames = ~files.collect { |file| file.fileName };
+
+    if(~deckSpeedState.isNil) { ~deckSpeedState = IdentityDictionary.new; };
+    if(~deckBasePitch.isNil) { ~deckBasePitch = IdentityDictionary.new; };
+    if(~applyDeckSpeedState.isNil) {
+        ~applyDeckSpeedState = { |deck, deckKey|
+            var basePitch = ~deckBasePitch[deckKey] ? ~pitch;
+            var isHalfSpeed = ~deckSpeedState[deckKey] ? false;
+            if(deck.notNil) {
+                deck.set(\pitch, if(isHalfSpeed) { basePitch * 0.5 } { basePitch });
+            };
+        };
+    };
+
+    createSpeedButton = { |deckFunc, deckKey|
+        var button, isHalfSpeed;
+
+        isHalfSpeed = ~deckSpeedState[deckKey] ? false;
+        ~deckSpeedState[deckKey] = isHalfSpeed;
+        ~deckBasePitch[deckKey] = ~deckBasePitch[deckKey] ? ~pitch;
+
+        button = Button(window)
+            .background_(Color.black)
+            .stringColor_(Color.white)
+            .maxHeight_(40)
+            .states_([
+                ["Vitesse x1", Color.white, Color.black],
+                ["Vitesse x0.5", Color.black, Color.gray(0.3)]
+            ])
+            .action_({ |but|
+                var deck = deckFunc.value;
+                var isHalf = (but.value == 1);
+
+                ~deckSpeedState[deckKey] = isHalf;
+                ~applyDeckSpeedState.(deck, deckKey);
+            });
+
+        button.value = if(isHalfSpeed) { 1 } { 0 };
+        ~applyDeckSpeedState.(deckFunc.value, deckKey);
+        button;
+    };
 
     // Flags → morceaux joués
     ~playedFlags = Array.fill(bufferNames.size, { false });
@@ -63,6 +106,7 @@
             };
             loopLabel1.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+    speedButton1 = createSpeedButton.({ ~deck1 }, \deck1);
 
     // --- Deck 2 ---
     textDeck2 = StaticText(window).string_("Player X Buffer:"); applyDarkStyle.(textDeck2);
@@ -90,6 +134,7 @@
             };
             loopLabel2.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+    speedButton2 = createSpeedButton.({ ~deck2 }, \deck2);
 
     // --- Deck 3 ---
     textDeck3 = StaticText(window).string_("Player Z Buffer:"); applyDarkStyle.(textDeck3);
@@ -117,6 +162,7 @@
             };
             loopLabel3.string = if(val == 1) { "Loop ON" } { "Loop OFF" };
         });
+    speedButton3 = createSpeedButton.({ ~deck3 }, \deck3);
 
     // --- Deck 4 ---
     textDeck4 = StaticText(window).string_("Player W Buffer:"); applyDarkStyle.(textDeck4);
@@ -144,6 +190,7 @@
             };
             loopLabel4.string = if(val == 1) { "Looped" } { "Loop OFF" };
         });
+    speedButton4 = createSpeedButton.({ ~deck4 }, \deck4);
 
     // --- Scope ---
     freqscope = FreqScopeView(window);
@@ -153,10 +200,10 @@
     window.layout_(
         VLayout(
             HLayout(
-                VLayout(textDeck1, listDeck1, loopLabel1, loopSlider1),
-                VLayout(textDeck2, listDeck2, loopLabel2, loopSlider2),
-                VLayout(textDeck3, listDeck3, loopLabel3, loopSlider3),
-                VLayout(textDeck4, listDeck4, loopLabel4, loopSlider4)
+                VLayout(textDeck1, listDeck1, loopLabel1, loopSlider1, speedButton1),
+                VLayout(textDeck2, listDeck2, loopLabel2, loopSlider2, speedButton2),
+                VLayout(textDeck3, listDeck3, loopLabel3, loopSlider3, speedButton3),
+                VLayout(textDeck4, listDeck4, loopLabel4, loopSlider4, speedButton4)
             ),
             freqscope
         )
