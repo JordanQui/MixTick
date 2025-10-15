@@ -4,63 +4,76 @@ SynthDef(\bufferPlayer, {
      low=0, mid1=0, mid2=0, high=0,
      cue=0, cuegain=1,
      loopOn=0, bpm=120, loopTrig=0,
-     smoothTime=0.01, fadeTime=0.05| // fadeTime = fondu aux bords de la boucle
+     smoothTime=0.01, fadeTime=0.05|
 
-    var bufFrames, rate, measureDurSec, measureFrames;
-    var phasorNormal, loopStart, loopEnd, phasorLoop;
+    var bufFrames, bufFramesA, bufSampleRate;
+    var rate, measureDurSec, measureFrames, measureFramesA;
+    var phasorNormal, phasorNormalK, pointerNormal;
+    var loopStartFrames, loopStartFramesA, loopStartNorm, loopEndNorm;
+    var pointerEnv, pointerLoop;
+    var fadeAmount, sustainDur, loopAmpEnv;
     var sigNormal, sigLoop, sig;
-    var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
-    var loopOnLag, fadeEnvNormal, loopMixEnv;
-    var trigImpulse, crossEnv, trigEvents;
+    var loopOnLag, trigEvents, trigImpulse, trigAudio, crossEnv;
+    var windowSize;
 
     // === Infos buffer ===
-    bufFrames = BufFrames.kr(bufnum);
-    rate = BufRateScale.kr(bufnum) * pitch;
+    bufFrames = (BufFrames.kr(bufnum) + 1e-6);
+    bufSampleRate = BufSampleRate.kr(bufnum);
+    bufFramesA = K2A.ar(bufFrames);
+    measureDurSec = (60 / bpm.max(1e-3)) * 4;
+    measureFrames = measureDurSec * bufSampleRate;
+    measureFramesA = K2A.ar(measureFrames);
 
-    // === Durée d'une mesure en frames (4 temps) ===
-    measureDurSec = (60 / bpm) * 4;
-    measureFrames = measureDurSec * BufSampleRate.kr(bufnum);
+    // === Rate indépendant du pitch ===
+    rate = BufRateScale.kr(bufnum);
 
     // === Trigger pour relancer la boucle ===
     trigEvents = HPZ1.kr(trig).max(0) + HPZ1.kr(loopTrig).max(0);
-    trigImpulse = Trig1.kr(trigEvents, 0.001);
+    trigImpulse = Trig1.kr(trigEvents, ControlDur.ir);
+    trigAudio = K2A.ar(trigImpulse);
 
-    // === Phasor normal (lecture libre) ===
+    // === Lecture libre (normal) ===
     phasorNormal = Phasor.ar(
         rate: rate,
         start: 0,
         end: bufFrames
     );
+    pointerNormal = (phasorNormal / bufFramesA).wrap(0, 1);
 
-    // === Points de boucle latched sur le trigger ===
-    loopStart = Latch.kr(phasorNormal, trigImpulse);
-    loopEnd   = loopStart + measureFrames;
+    // === Position du loop capturée au déclenchement ===
+    phasorNormalK = A2K.kr(phasorNormal);
+    loopStartFrames = Latch.kr(phasorNormalK, trigImpulse);
+    loopStartFramesA = K2A.ar(loopStartFrames);
+    loopStartNorm = loopStartFramesA / bufFramesA;
+    loopEndNorm = (loopStartFramesA + measureFramesA) / bufFramesA;
 
-    // === Phasor en mode boucle ===
-    phasorLoop = Phasor.ar(
-        trig: trigImpulse,
-        resetPos: loopStart,
-        rate: rate,
-        start: loopStart,
-        end: loopEnd
+    // === Enveloppe de position pour la boucle ===
+    pointerEnv = EnvGen.ar(
+        Env([0, 1], [measureDurSec], 'lin'),
+        trigAudio,
+        doneAction: 0
+    );
+    pointerLoop = (loopStartNorm + pointerEnv * (loopEndNorm - loopStartNorm)).wrap(0, 1);
+
+    // === Fenêtre temporelle pour Warp1 ===
+    windowSize = (measureDurSec / 8).clip(0.02, 0.5);
+
+    // === Enveloppe d'amplitude de la boucle (une mesure) ===
+    fadeAmount = fadeTime.min(measureDurSec * 0.5);
+    sustainDur = (measureDurSec - (2 * fadeAmount)).max(0.0);
+    loopAmpEnv = EnvGen.ar(
+        Env([0, 1, 1, 0], [fadeAmount, sustainDur, fadeAmount.max(0.0001)], 'lin'),
+        trigAudio,
+        doneAction: 0
     );
 
-    // === Lecture audio ===
-    sigNormal = BufRd.ar(2, bufnum, phasorNormal, loop: 1);
-    sigLoop   = BufRd.ar(2, bufnum, phasorLoop, loop: 1);
+    // === Lecture Warp1 : tempo/pitch indépendants ===
+    sigNormal = Warp1.ar(2, bufnum, pointerNormal, pitch, windowSize, -1, 8, 0.0, 2);
+    sigLoop   = Warp1.ar(2, bufnum, pointerLoop,  pitch, windowSize, -1, 8, 0.0, 2) * loopAmpEnv;
 
-    // === Fade sur les bords de la boucle ===
-    fadeFrames = fadeTime * BufSampleRate.kr(bufnum);
-    fadeInLoop  = ((phasorLoop - loopStart) / fadeFrames).clip(0, 1);
-    fadeOutLoop = ((loopEnd - phasorLoop) / fadeFrames).clip(0, 1);
-    fadeEnvLoop = fadeInLoop * fadeOutLoop;
-    sigLoop = sigLoop * fadeEnvLoop;
-
-    // === Crossfade normal <-> loop ===
-    loopOnLag     = Lag.kr(loopOn, 0.1);
-    fadeEnvNormal = (1 - loopOnLag);
-    loopMixEnv    = loopOnLag;
-    sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
+    // === Mix normal <-> loop ===
+    loopOnLag = Lag.kr(loopOn, 0.1);
+    sig = (sigNormal * (1 - loopOnLag)) + (sigLoop * loopOnLag);
 
     // === Anti-clic supplémentaire lors d’un changement de trig ===
     crossEnv = Lag.kr(trigEvents, smoothTime);
