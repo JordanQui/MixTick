@@ -23,7 +23,8 @@
             var basePitch = ~deckBasePitch[deckKey] ? ~pitch;
             var isHalfSpeed = ~deckSpeedState[deckKey] ? false;
             if(deck.notNil) {
-                deck.set(\pitch, if(isHalfSpeed) { basePitch * 0.5 } { basePitch });
+                deck.set(\pitch, basePitch);
+                deck.set(\speedMix, if(isHalfSpeed) { 1 } { 0 });
             };
         };
     };

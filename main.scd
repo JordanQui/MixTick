@@ -41,7 +41,8 @@ s.options.maxNodes = 1024;
         var basePitch = ~deckBasePitch[deckKey] ? ~pitch;
         var isHalfSpeed = ~deckSpeedState[deckKey] ? false;
         if(deck.notNil) {
-            deck.set(\pitch, if(isHalfSpeed) { basePitch * 0.5 } { basePitch });
+            deck.set(\pitch, basePitch);
+            deck.set(\speedMix, if(isHalfSpeed) { 1 } { 0 });
         };
     };
 
@@ -100,10 +101,10 @@ s.options.maxNodes = 1024;
     ~limiter = Synth(\outputLimiter, [\input, ~outputBus, \out, 0]);
 
     // decks
-    ~deck1 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
-    ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
-    ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
-    ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \amp, 0, \out, ~outputBus]);
+    ~deck1 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \speedMix, 0, \amp, 0, \out, ~outputBus]);
+    ~deck2 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \speedMix, 0, \amp, 0, \out, ~outputBus]);
+    ~deck3 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \speedMix, 0, \amp, 0, \out, ~outputBus]);
+    ~deck4 = Synth(\bufferPlayer, [\bufnum, 0, \pitch, ~pitch, \speedMix, 0, \amp, 0, \out, ~outputBus]);
     [~deck1, ~deck2, ~deck3, ~deck4].do { |deck, i|
         var deckKey = [\deck1, \deck2, \deck3, \deck4][i];
         ~applyDeckSpeedState.(deck, deckKey);
