@@ -4,7 +4,8 @@ SynthDef(\bufferPlayer, {
      low=0, mid1=0, mid2=0, high=0,
      cue=0, cuegain=1,
      loopOn=0, bpm=120, loopTrig=0,
-     smoothTime=0.01, fadeTime=0.05| // fadeTime = fondu aux bords de la boucle
+     smoothTime=0.01, fadeTime=0.05,
+     loopFadeTime=0.15, trigFadeTime=0.02| // fadeTime = fondu aux bords de la boucle
 
     var bufFrames, rate, measureDurSec, measureFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
@@ -66,13 +67,16 @@ SynthDef(\bufferPlayer, {
     loopOnState = Latch.kr(loopOn, zeroCrossTrig + zeroCrossFallback);
 
     // === Crossfade normal <-> loop ===
-    loopOnLag     = Lag.kr(loopOnState, 0.1);
+    loopOnLag     = LagUD.kr(loopOnState, loopFadeTime, loopFadeTime);
     fadeEnvNormal = (1 - loopOnLag);
     loopMixEnv    = loopOnLag;
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
 
     // === Anti-clic supplémentaire lors d’un changement de trig ===
-    crossEnv = Lag.kr(trigEvents, smoothTime);
+    crossEnv = EnvGen.kr(
+        Env([0, 1, 0], [trigFadeTime, trigFadeTime], 'sin'),
+        trigImpulse
+    );
     sig = (sig * (1 - crossEnv)) + (sigLoop * crossEnv);
 
     // === EQ ===
