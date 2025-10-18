@@ -8,10 +8,11 @@ SynthDef(\bufferPlayer, {
 
     var bufFrames, rate, measureDurSec, measureFrames;
     var phasorNormal, loopStart, loopEnd, phasorLoop;
-    var sigNormal, sigLoop, sig;
+    var sigNormal, sigLoop, sig, sigMonitor;
     var fadeFrames, fadeInLoop, fadeOutLoop, fadeEnvLoop;
-    var loopOnLag, fadeEnvNormal, loopMixEnv;
+    var loopOnLag, loopOnState, fadeEnvNormal, loopMixEnv;
     var trigImpulse, crossEnv, trigEvents;
+    var zeroCrossTrig, zeroCrossFallback, loopOnChange, ampMonitor;
 
     // === Infos buffer ===
     bufFrames = BufFrames.kr(bufnum);
@@ -56,8 +57,16 @@ SynthDef(\bufferPlayer, {
     fadeEnvLoop = fadeInLoop * fadeOutLoop;
     sigLoop = sigLoop * fadeEnvLoop;
 
+    // === Détection de zero crossing pour activer/désactiver la boucle sans clic ===
+    sigMonitor = Mix((sigNormal + sigLoop) * 0.5);
+    zeroCrossTrig = A2K.kr(HPZ1.ar(sigMonitor.sign).abs);
+    loopOnChange = HPZ1.kr(loopOn).abs;
+    ampMonitor = Amplitude.kr(sigMonitor, 0.01, 0.05);
+    zeroCrossFallback = loopOnChange * (ampMonitor < 0.0001);
+    loopOnState = Latch.kr(loopOn, zeroCrossTrig + zeroCrossFallback);
+
     // === Crossfade normal <-> loop ===
-    loopOnLag     = Lag.kr(loopOn, 0.1);
+    loopOnLag     = Lag.kr(loopOnState, 0.1);
     fadeEnvNormal = (1 - loopOnLag);
     loopMixEnv    = loopOnLag;
     sig = (sigNormal * fadeEnvNormal) + (sigLoop * loopMixEnv);
