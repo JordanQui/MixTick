@@ -170,14 +170,14 @@
         )
     );
 
-    window.keyDownAction = { |view, char|
+    window.view.keyDownAction_({ |view, char|
         switch(char,
             $w, { toggleLoop.(loopSlider1) },
             $x, { toggleLoop.(loopSlider2) },
             $c, { toggleLoop.(loopSlider3) },
             $v, { toggleLoop.(loopSlider4) }
         );
-    };
+    });
 
     window.onClose = { window.close; freqscope.kill };
     window.front;
