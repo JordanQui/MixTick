@@ -4,7 +4,8 @@
     listDeck1, listDeck2, listDeck3, listDeck4,
     loopSlider1, loopLabel1, loopSlider2, loopLabel2,
     loopSlider3, loopLabel3, loopSlider4, loopLabel4,
-    freqscope;
+    freqscope,
+    toggleLoop;
 
     var applyDarkStyle = { |view|
         view.background_(Color.black).stringColor_(Color.white);
@@ -36,6 +37,13 @@
 
     window = Window.new("Buffer Selector", Rect(100, 100, 500, 400))
         .background_(Color.black);
+
+    // Helper pour toggler une boucle et répercuter l'état sur l'UI + le synth
+    toggleLoop = { |slider|
+        var current = slider.value.asInteger;
+        var newVal = if(current == 0) { 1 } { 0 };
+        slider.valueAction_(newVal);
+    };
 
     // --- Deck 1 ---
     textDeck1 = StaticText(window).string_("Player Y Buffer:"); applyDarkStyle.(textDeck1);
@@ -161,6 +169,15 @@
             freqscope
         )
     );
+
+    window.keyDownAction = { |view, char|
+        switch(char,
+            $w, { toggleLoop.(loopSlider1) },
+            $x, { toggleLoop.(loopSlider2) },
+            $c, { toggleLoop.(loopSlider3) },
+            $v, { toggleLoop.(loopSlider4) }
+        );
+    };
 
     window.onClose = { window.close; freqscope.kill };
     window.front;
