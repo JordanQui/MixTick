@@ -171,7 +171,7 @@
     );
 
     window.view.keyDownAction_({ |view, char|
-        var lowerChar = char.asAscii.toLower.at(0);
+        var lowerChar = char.toLower;
         switch(lowerChar,
             $w, { toggleLoop.(loopSlider1) },
             $z, { toggleLoop.(loopSlider1) }, // Support AZERTY where physical "W" key produces "z"
