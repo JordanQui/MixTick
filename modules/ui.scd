@@ -5,7 +5,9 @@
     loopSlider1, loopLabel1, loopSlider2, loopLabel2,
     loopSlider3, loopLabel3, loopSlider4, loopLabel4,
     freqscope,
-    toggleLoop;
+    toggleLoop,
+    loopSliders, loopShortcutMap, registerShortcut,
+    resolveLoopShortcut, applyShortcut, shouldLogUnmapped;
 
     var applyDarkStyle = { |view|
         view.background_(Color.black).stringColor_(Color.white);
@@ -157,6 +159,102 @@
     freqscope = FreqScopeView(window);
     freqscope.active_(true);
 
+    // Préparer les raccourcis clavier (support QWERTY, AZERTY, overrides…)
+    loopSliders = [loopSlider1, loopSlider2, loopSlider3, loopSlider4];
+    loopShortcutMap = Dictionary.new;
+
+    registerShortcut = { |keys, slider|
+        var keyList;
+
+        if(slider.isNil) { ^nil };
+
+        keyList = if(keys.isArray) {
+            keys
+        } {
+            if(keys.isKindOf(List)) {
+                keys.asArray
+            } {
+                [keys]
+            }
+        };
+
+        keyList.do { |key|
+            if(key.notNil) {
+                loopShortcutMap[key.asString.toLower] = slider;
+            };
+        };
+    };
+
+    resolveLoopShortcut = { |descriptor|
+        if(descriptor.isNil) { ^nil };
+
+        if(descriptor.isKindOf(Slider)) { ^descriptor };
+
+        if(descriptor.isKindOf(Integer)) {
+            var index = descriptor - 1;
+            if(index >= 0 and: { index < loopSliders.size }) {
+                ^loopSliders[index];
+            } {
+                ^nil;
+            };
+        };
+
+        if(descriptor.isKindOf(Symbol)) {
+            switch(descriptor,
+                \loop1, { ^loopSlider1 },
+                \deck1, { ^loopSlider1 },
+                \loop2, { ^loopSlider2 },
+                \deck2, { ^loopSlider2 },
+                \loop3, { ^loopSlider3 },
+                \deck3, { ^loopSlider3 },
+                \loop4, { ^loopSlider4 },
+                \deck4, { ^loopSlider4 },
+                { ^nil }
+            );
+        };
+
+        if(descriptor.isKindOf(String)) {
+            ^resolveLoopShortcut.(descriptor.asSymbol);
+        };
+
+        ^nil;
+    };
+
+    registerShortcut.( ["w", "z"], loopSlider1 ); // W key on QWERTY, Z on AZERTY
+    registerShortcut.( "x", loopSlider2 );
+    registerShortcut.( "c", loopSlider3 );
+    registerShortcut.( "v", loopSlider4 );
+
+    if(~loopShortcutOverrides.isKindOf(Dictionary)) {
+        ~loopShortcutOverrides.keysValuesDo { |key, descriptor|
+            var slider = resolveLoopShortcut.(descriptor);
+
+            if(slider.notNil) {
+                registerShortcut.(key, slider);
+            } {
+                ("[MixTick] Impossible d'affecter le raccourci %: cible inconnue (%)"
+                    .format(key, descriptor)).postln;
+            };
+        };
+    };
+
+    applyShortcut = { |keyString|
+        var slider;
+
+        if(keyString.isNil or: { keyString.size == 0 }) { ^false };
+
+        slider = loopShortcutMap[keyString];
+
+        if(slider.notNil) {
+            toggleLoop.(slider);
+            ^true;
+        };
+
+        ^false;
+    };
+
+    shouldLogUnmapped = (~loopShortcutDebug == true);
+
     // --- Layout ---
     window.layout_(
         VLayout(
@@ -170,22 +268,37 @@
         )
     );
 
-    window.view.keyDownAction_({ |view, char|
-        var lowerChar;
+    window.view.keyDownAction_({ |view, char, modifiers, unicode, keycode|
+        var matched = false;
 
-        lowerChar = if(char.isNil) {
-            ""
-        } {
-            char.asString.toLower;
+        if(char.notNil) {
+            matched = applyShortcut.(char.asString.toLower);
         };
 
-        switch(lowerChar,
-            "w", { toggleLoop.(loopSlider1) },
-            "z", { toggleLoop.(loopSlider1) }, // Support AZERTY where physical "W" key produces "z"
-            "x", { toggleLoop.(loopSlider2) },
-            "c", { toggleLoop.(loopSlider3) },
-            "v", { toggleLoop.(loopSlider4) }
-        );
+        if(matched.not and: { unicode.notNil }) {
+            var unicodeChar = unicode;
+
+            if(unicodeChar.isKindOf(Integer)) {
+                unicodeChar = unicodeChar.asAscii;
+            };
+
+            if(unicodeChar.notNil) {
+                matched = applyShortcut.(unicodeChar.asString.toLower);
+            };
+        };
+
+        if(matched.not and: { shouldLogUnmapped }) {
+            var describe = { |value|
+                if(value.isNil) { "nil" } { value.asString }
+            };
+
+            ("[MixTick] Touche non assignée → char:% unicode:% keycode:%"
+                .format(
+                    describe.(char),
+                    describe.(unicode),
+                    describe.(keycode)
+                )).postln;
+        };
     });
 
     window.onClose = { window.close; freqscope.kill };
