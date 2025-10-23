@@ -171,13 +171,20 @@
     );
 
     window.view.keyDownAction_({ |view, char|
-        var lowerChar = char.toLower;
+        var lowerChar;
+
+        lowerChar = if(char.isNil) {
+            ""
+        } {
+            char.asString.toLower;
+        };
+
         switch(lowerChar,
-            $w, { toggleLoop.(loopSlider1) },
-            $z, { toggleLoop.(loopSlider1) }, // Support AZERTY where physical "W" key produces "z"
-            $x, { toggleLoop.(loopSlider2) },
-            $c, { toggleLoop.(loopSlider3) },
-            $v, { toggleLoop.(loopSlider4) }
+            "w", { toggleLoop.(loopSlider1) },
+            "z", { toggleLoop.(loopSlider1) }, // Support AZERTY where physical "W" key produces "z"
+            "x", { toggleLoop.(loopSlider2) },
+            "c", { toggleLoop.(loopSlider3) },
+            "v", { toggleLoop.(loopSlider4) }
         );
     });
 
